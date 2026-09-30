@@ -225,28 +225,12 @@
   }
   function deselect() { sel = null; panel.hidden = true; applyFocus(); }
 
-  function showPanel(n, isSpouse) {
-    const c = n.color, kids = n.children, sibs = n.parent ? n.parent.children.filter((s) => s !== n) : [];
-    const pill = (p) => `<span class="pill" data-go="${p.id}">${esc(p.name)}</span>`;
-    const pathHTML = chain(n).map((p) => `<div data-go="${p.id}">${esc(p.name)}</div>`).join('');
-    panel.style.setProperty('--c', c);
-    panel.innerHTML = `
-      <button class="x" aria-label="Close">×</button>
-      <div class="p-head">
-        <div class="p-av">${esc((n.name[0] || '?').toUpperCase())}</div>
-        <h2>${esc(n.name)}</h2>
-        <span class="chip">Generation ${n.depth + 1}${n.branch ? ' · ' + esc(n.branch.name) + ' branch' : ''}</span>
-      </div>
-      <div class="nums">
-        <div><b>${kids.length}</b><span>Santaan</span></div>
-        <div><b>${countDesc(n)}</b><span>Vanshaj</span></div>
-        <div><b>${sibs.length}</b><span>Bhai-behen</span></div>
-      </div>
-      ${n.spouse ? `<div class="p-sec"><h3>Jeevansathi</h3><div class="pills"><span class="pill static">♥ ${esc(n.spouse)}</span></div></div>` : ''}
-      ${n.parent ? `<div class="p-sec"><h3>Mata-pita / Parent</h3><div class="pills">${pill(n.parent)}</div></div>` : ''}
-      ${kids.length ? `<div class="p-sec"><h3>Santaan (${kids.length})</h3><div class="pills">${kids.map(pill).join('')}</div></div>` : ''}
-      ${sibs.length ? `<div class="p-sec"><h3>Bhai-behen (${sibs.length})</h3><div class="pills">${sibs.map(pill).join('')}</div></div>` : ''}
-      <div class="p-sec"><h3>Vansh ki line</h3><div class="path">${pathHTML}</div></div>${EDIT ? editHTML(n) : ''}`;
+  // The details panel is only used by edit mode (#edit); visitors just get the path highlight.
+  function showPanel(n) {
+    if (!EDIT) return;
+    panel.style.setProperty('--c', n.color);
+    panel.innerHTML = `<button class="x" aria-label="Close">×</button>
+      <div class="p-head"><h2>${esc(n.name)}</h2></div>${editHTML(n)}`;
     panel.hidden = false;
   }
 
