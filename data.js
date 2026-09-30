@@ -1,6 +1,6 @@
-// Bhadke family data — yahan se naam badal sakte ho, naye log add kar sakte ho.
-// Har person: { id, name, spouse?, children? }
-// "spouse" likhne par person ke saath jeevansathi ka card dikhega.
+// Bhadke family data — edit names and add new people here.
+// Every person: { id, name, spouse?, children? }
+// Adding "spouse" shows the partner's card next to the person.
 window.FAMILY = {
   id: 'menga', name: 'Menga Bhadke',
   children: [{
