@@ -14,7 +14,6 @@
   --glow: rgba(233, 185, 73, .14);
   --serif: 'Playfair Display', Georgia, serif;
   --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --deva: 'Noto Serif Devanagari', 'Nirmala UI', serif;
 }
 :root[data-theme="light"] {
   --bg: #f6f3ec;
@@ -55,7 +54,7 @@ body {
   background-size: 28px 28px;
 }
 #vp.drag { cursor: grabbing; }
-#world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+#world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 #world.animate { transition: transform .65s cubic-bezier(.22, .8, .2, 1); }
 #lines { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 #cards { position: absolute; left: 0; top: 0; }
@@ -176,7 +175,6 @@ body {
   box-shadow: 0 4px 14px var(--glow);
 }
 h1 { font: 700 21px/1.1 var(--serif); letter-spacing: .2px; }
-.deva { font: 500 12.5px var(--deva); color: var(--gold); margin-top: 2px; letter-spacing: .5px; }
 
 .search { position: relative; display: flex; align-items: center; }
 .search > svg { position: absolute; left: 12px; color: var(--muted); pointer-events: none; }

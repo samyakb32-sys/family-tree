@@ -115,12 +115,12 @@
   }
 
   function unitHTML(n) {
-    const lvl = `<div class="sb">पीढ़ी ${n.depth + 1}</div>`;
+    const lvl = `<div class="sb">Generation ${n.depth + 1}</div>`;
     const av = (s) => `<div class="av">${s.trim()[0].toUpperCase()}</div>`;
     let h = `<div class="card" data-id="${n.id}" tabindex="0" role="button" aria-label="${n.name}">${av(n.name)}<div class="tx"><div class="nm">${n.name}</div>${lvl}</div></div>`;
     if (n.spouse) {
       h += `<div class="ring"><i>♥</i></div>`;
-      h += `<div class="card spouse" data-id="${n.id}" data-sp="1" tabindex="0" role="button" aria-label="${n.spouse}">${av(n.spouse)}<div class="tx"><div class="nm">${n.spouse}</div><div class="sb">जीवनसाथी</div></div></div>`;
+      h += `<div class="card spouse" data-id="${n.id}" data-sp="1" tabindex="0" role="button" aria-label="${n.spouse}">${av(n.spouse)}<div class="tx"><div class="nm">${n.spouse}</div><div class="sb">Spouse</div></div></div>`;
     }
     if (n.children.length) {
       h += `<button class="tog" data-tog="${n.id}" aria-label="Expand or collapse"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5l3 3 3-3"/></svg><em></em></button>`;
@@ -231,7 +231,7 @@
       <div class="p-head">
         <div class="p-av">${n.name[0].toUpperCase()}</div>
         <h2>${n.name}</h2>
-        <span class="chip">पीढ़ी ${n.depth + 1}${n.branch ? ' · ' + n.branch.name + ' shakha' : ''}</span>
+        <span class="chip">Generation ${n.depth + 1}${n.branch ? ' · ' + n.branch.name + ' branch' : ''}</span>
       </div>
       <div class="nums">
         <div><b>${kids.length}</b><span>Santaan</span></div>
@@ -290,7 +290,7 @@
     if (!q) { resEl.hidden = true; return; }
     hits = [];
     all.forEach((n) => {
-      if (n.name.toLowerCase().includes(q)) hits.push({ n, label: n.name, sub: `पीढ़ी ${n.depth + 1}` });
+      if (n.name.toLowerCase().includes(q)) hits.push({ n, label: n.name, sub: `Generation ${n.depth + 1}` });
       if (n.spouse && n.spouse.toLowerCase().includes(q)) hits.push({ n, label: n.spouse, sub: `${first(n.name)} ke jeevansathi` });
     });
     hi = 0;

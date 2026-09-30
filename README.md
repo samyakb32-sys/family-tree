@@ -1,4 +1,4 @@
-# Bhadke Family Tree (वंशावली)
+# Bhadke Family Tree
 
 Interactive family tree — open `index.html` in a browser (no build step).
 
