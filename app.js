@@ -124,7 +124,7 @@
     addsp: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
     del: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
   };
-  const TIP = { edit: 'Naam badlo', editsp: 'Naam badlo', addc: 'Bachcha jodo', addsp: 'Jeevansathi jodo', delsp: 'Jeevansathi hatao', del: 'Delete karo' };
+  const TIP = { edit: 'Rename', editsp: 'Rename', addc: 'Add child', addsp: 'Add partner', delsp: 'Remove partner', del: 'Delete' };
   // edit mode only: small action bar sitting on top of each card
   const acts = (cls, list) => !EDIT ? '' : `<div class="acts ${cls}">${list.map(([a, ic]) =>
     `<button data-act="${a}" title="${TIP[a]}" aria-label="${TIP[a]}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[ic]}</svg></button>`).join('')}</div>`;
@@ -254,22 +254,22 @@
   const ask = (msg, val) => { const v = prompt(msg, val); return v === null ? '' : v.replace(/\s+/g, ' ').trim().slice(0, 80); };
   function editAct(act, n) {
     if (act === 'edit' || act === 'editsp') {
-      const nm = ask('Naam?', act === 'edit' ? n.name : n.spouse); if (!nm) return;
+      const nm = ask('Name?', act === 'edit' ? n.name : n.spouse); if (!nm) return;
       if (act === 'edit') n.name = nm; else n.spouse = nm;
       commit(n.id);
     } else if (act === 'addc') {
-      const nm = ask('Bachche ka naam?'); if (!nm) return;
+      const nm = ask("Child's name?"); if (!nm) return;
       const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
       n.children.push({ id, name: nm, children: [] }); commit(id);
     } else if (act === 'addsp') {
-      const nm = ask('Jeevansathi ka naam?'); if (!nm) return;
+      const nm = ask("Partner's name?"); if (!nm) return;
       n.spouse = nm; commit(n.id);
     } else if (act === 'delsp') {
-      if (!confirm(`"${n.spouse}" ko hata dena hai?`)) return;
+      if (!confirm(`Remove "${n.spouse}"?`)) return;
       delete n.spouse; commit(n.id);
     } else if (act === 'del') {
       const c = countDesc(n);
-      if (!confirm(`"${n.name}" ko delete karna hai?` + (c ? `\nUnke ${c} vanshaj bhi hat jayenge.` : ''))) return;
+      if (!confirm(`Delete "${n.name}"?` + (c ? `\nTheir ${plural(c, 'descendant')} will be removed too.` : ''))) return;
       n.parent.children = n.parent.children.filter((x) => x !== n); commit(n.parent.id);
     }
   }
@@ -279,20 +279,20 @@
   }
   // Asks for the edit password before anything is exported ("finishing" an edit).
   async function unlocked() {
-    if (!(window.crypto && crypto.subtle)) { alert('Password check ke liye https (GitHub Pages) chahiye.'); return false; }
+    if (!(window.crypto && crypto.subtle)) { alert('The password check needs https (GitHub Pages).'); return false; }
     const want = window.PASS_HASH;
     if (!want) {
-      const pw = prompt('Abhi koi password set nahi hai. Naya password chuno (kam se kam 6 akshar):');
+      const pw = prompt('No password is set yet. Choose a new password (at least 6 characters):');
       if (!pw) return false;
-      if (pw.length < 6) { alert('Password bahut chhota hai.'); return false; }
+      if (pw.length < 6) { alert('Password is too short.'); return false; }
       const line = `window.PASS_HASH = '${await sha(pw)}';`;
-      prompt('Is line ko GitHub par auth.js me paste karke commit karo, phir password active ho jayega:', line);
+      prompt('Paste this line into auth.js on GitHub and commit it. The password becomes active after that:', line);
       return false;
     }
-    const pw = prompt('Edit password daalo:');
+    const pw = prompt('Enter the edit password:');
     if (pw === null) return false;
     if ((await sha(pw)) === want) return true;
-    alert('Galat password.'); return false;
+    alert('Wrong password.'); return false;
   }
   function exportData() {
     return '// Bhadke family data — generated from edit mode.\nwindow.FAMILY = ' + JSON.stringify(ser(root), null, 2) + ';\n';
@@ -300,7 +300,7 @@
   if (EDIT) {
     const bar = document.createElement('div');
     bar.className = 'editbar';
-    bar.innerHTML = `<b>Edit mode</b><span>Har card ke upar buttons hain: naam badlo, bachcha jodo, jeevansathi jodo, delete. Badlav sirf aapke browser me hain — sab ko dikhane ke liye Export karke data.js GitHub par daalo.</span>
+    bar.innerHTML = `<b>Edit mode</b><span>Each card has buttons on top: rename, add child, add partner, delete. Changes stay in your browser only — to publish them, Export and upload data.js to GitHub.</span>
       <button data-bar="exp">Export data.js</button><button data-bar="copy">Copy</button><button data-bar="reset">Reset</button>`;
     document.body.appendChild(bar);
     bar.addEventListener('click', async (e) => {
@@ -313,8 +313,8 @@
       } else if (k.dataset.bar === 'copy') {
         (navigator.clipboard ? navigator.clipboard.writeText(exportData()) : Promise.reject()).then(
           () => { k.textContent = 'Copied!'; setTimeout(() => (k.textContent = 'Copy'), 1500); },
-          () => prompt('Ye copy karo:', exportData()));
-      } else if (confirm('Saare draft badlav hata ke original data.js par wapas jaana hai?')) {
+          () => prompt('Copy this:', exportData()));
+      } else if (confirm('Discard all draft changes and go back to the original data.js?')) {
         try { localStorage.removeItem(DRAFT); } catch (_) {}
         sel = null; load(window.FAMILY); render(false); fit(true);
       }
@@ -360,12 +360,12 @@
     hits = [];
     all.forEach((n) => {
       if (n.name.toLowerCase().includes(q)) hits.push({ n, label: n.name, sub: `Generation ${n.depth + 1}` });
-      if (n.spouse && n.spouse.toLowerCase().includes(q)) hits.push({ n, label: n.spouse, sub: `${esc(first(n.name))} ke jeevansathi` });
+      if (n.spouse && n.spouse.toLowerCase().includes(q)) hits.push({ n, label: n.spouse, sub: `partner of ${esc(first(n.name))}` });
     });
     hi = 0;
     resEl.innerHTML = hits.length
       ? hits.slice(0, 12).map((h, i) => `<li data-i="${i}" class="${i === 0 ? 'on' : ''}">${esc(h.label)}<small>${h.sub}</small></li>`).join('')
-      : '<li class="none">Koi nahi mila</li>';
+      : '<li class="none">No results found</li>';
     resEl.hidden = false;
   }
   function go(i) {
@@ -425,11 +425,11 @@
     const spouses = all.filter((n) => n.spouse).length;
 
     section('sec-path', me ? `My Path — Root to ${esc(first(me.name))}` : 'My Path',
-      me ? `The unique path from the root node to me, traversing ${plural(edges, 'edge')} through ${plural(path.length, 'node')}` : 'student.js me meId ko data.js ke kisi person ke id par set karo.',
+      me ? `The unique path from the root node to me, traversing ${plural(edges, 'edge')} through ${plural(path.length, 'node')}` : 'Set meId in student.js to a person id from data.js.',
       `<div class="chain">${path.map((n, i) => `${i ? `<div class="edge"><i></i>Edge ${i}<i></i></div>` : ''}<div class="pnode"><b>${esc(n.name)}</b><small>Level ${n.depth}</small></div>`).join('')}</div>`);
 
     section('sec-analysis', 'Tree Analysis',
-      'Mathematical properties computed from the tree data structure' + (spouses ? '<br><small>Jeevansathi (spouse) tree ka node nahi hote — sirf vanshaj nodes count hote hain.</small>' : ''),
+      'Mathematical properties computed from the tree data structure' + (spouses ? '<br><small>Partners (spouses) are not tree nodes — only descendant nodes are counted.</small>' : ''),
       `<div class="grid">${[
         acard('#5b9bff', 'Root Node', 'The topmost node with no parent. Every tree has exactly one root.', `<div class="box mono">${esc(root.name)} (Level 0)</div>`),
         acard('#b980ff', 'Height of Tree', 'The length of the longest root-to-leaf path, counted in edges.', `<div class="box"><div class="big">${maxDepth}</div><small>Path: ${arrow(longest)} = ${plural(maxDepth, 'edge')}</small></div>`),
@@ -453,7 +453,7 @@
       ['#4dd0e1', maxDepth + 1, 'Generations', `Total depth levels (Level 0 to Level ${maxDepth})`, '<path d="M4 7h16M4 12h16M4 17h16"/>'],
       ['#ff6b81', maxDeg, 'Max Degree', 'Most children any node has', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 16v-3M12 16V9M16 16v-5"/>'],
       me && [GOLD, me.depth, 'My Level', `${esc(first(me.name))}'s level in the tree`, '<path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>'],
-      ['#ff8fb0', all.length + spouses, 'Members', 'Nodes + jeevansathi (spouses)', ICON.addsp],
+      ['#ff8fb0', all.length + spouses, 'Members', 'Nodes + partners (spouses)', ICON.addsp],
     ].filter(Boolean);
     section('sec-stats', 'Family Statistics', 'Auto-calculated metrics from the family tree data structure',
       `<div class="tiles">${tiles.map(([c, v, l, d, p]) => `<div class="tile" style="--c:${c}">${icon(p)}<b>${v}</b><strong>${l}</strong><small>${d}</small></div>`).join('')}</div>`);
