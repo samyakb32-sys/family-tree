@@ -12,3 +12,6 @@ Open the site with `#edit` at the end of the URL (e.g. `.../family-tree/#edit`).
 Changes stay in your browser as a draft. Click **Export data.js** (asks for the edit password), then upload it to GitHub to publish.
 Visitors cannot change what others see — only someone who can commit to this repo can.
 First time: click Export, choose a password, paste the line it shows into `auth.js`, commit.
+
+## Publishing note
+GitHub Pages caches files for ~10 minutes. `index.html` loads `app.js?v=2` and `style.css?v=2` — when you change `app.js` or `style.css`, bump the `v=` number in `index.html` so visitors never get a new page with an old script (that shows an empty tree until a hard refresh).
