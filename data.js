@@ -27,7 +27,7 @@ window.FAMILY = {
             id: 'khuja', name: 'Khuja',
             children: [
               { id: 'anil', name: 'Anil', children: [{ id: 'pankaj', name: 'Pankaj' }] },
-              { id: 'latabai', name: 'Latabai', spouse: 'Gedam' }
+              { id: 'latabai', name: 'Latabai Gedam' }
             ]
           }
         ]
