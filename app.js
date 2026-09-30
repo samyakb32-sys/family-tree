@@ -336,7 +336,6 @@
   vp.addEventListener('click', (e) => { if (moved <= 5 && !e.target.closest('.unit')) deselect(); });
   panel.addEventListener('click', (e) => {
     if (e.target.closest('.x')) return deselect();
-    const g = e.target.closest('[data-go]'); if (g) select(byId[g.dataset.go]);
   });
 
   $('#zin').onclick = () => zoomAt(1.3, innerWidth / 2, innerHeight / 2, true);
