@@ -12,8 +12,16 @@
   cardsEl.style.setProperty('--ch', CH + 'px');
 
   /* ---------- data prep ---------- */
-  const byId = {};
-  let maxDepth = 0;
+  const shown = new Set();
+  let byId = {}, all = [], root = null, maxDepth = 0;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const EDIT = location.hash === '#edit'; // edit tools are only shown with #edit in the URL
+  const DRAFT = 'ft-draft';
+  function load(data) {
+    byId = {}; maxDepth = 0; shown.clear(); cardsEl.innerHTML = '';
+    root = JSON.parse(JSON.stringify(data)); prep(root, null, 0, null);
+    all = Object.values(byId); updateStats();
+  }
   function prep(n, parent, depth, branch) {
     n.parent = parent; n.depth = depth; n.children = n.children || [];
     if (depth === 2) { // children of Narayan start a branch
@@ -26,9 +34,6 @@
     byId[n.id] = n; maxDepth = Math.max(maxDepth, depth);
     n.children.forEach((c) => prep(c, n, depth + 1, branch));
   }
-  const root = window.FAMILY;
-  prep(root, null, 0, null);
-  const all = Object.values(byId);
   const countDesc = (n) => n.children.reduce((s, c) => s + 1 + countDesc(c), 0);
   const first = (s) => s.split(' ')[0];
 
@@ -58,7 +63,6 @@
     n.kids.forEach((k) => { place(k, x, d + 1); x += k.sw + GX; });
   }
   let W = 0, H = 0;
-  const shown = new Set();
 
   function render(first_) {
     all.forEach((n) => (n.vis = false));
@@ -116,11 +120,11 @@
 
   function unitHTML(n) {
     const lvl = `<div class="sb">Generation ${n.depth + 1}</div>`;
-    const av = (s) => `<div class="av">${s.trim()[0].toUpperCase()}</div>`;
-    let h = `<div class="card" data-id="${n.id}" tabindex="0" role="button" aria-label="${n.name}">${av(n.name)}<div class="tx"><div class="nm">${n.name}</div>${lvl}</div></div>`;
+    const av = (s) => `<div class="av">${esc((s.trim()[0] || '?').toUpperCase())}</div>`;
+    let h = `<div class="card" data-id="${n.id}" tabindex="0" role="button" aria-label="${esc(n.name)}">${av(n.name)}<div class="tx"><div class="nm">${esc(n.name)}</div>${lvl}</div></div>`;
     if (n.spouse) {
       h += `<div class="ring"><i>♥</i></div>`;
-      h += `<div class="card spouse" data-id="${n.id}" data-sp="1" tabindex="0" role="button" aria-label="${n.spouse}">${av(n.spouse)}<div class="tx"><div class="nm">${n.spouse}</div><div class="sb">Spouse</div></div></div>`;
+      h += `<div class="card spouse" data-id="${n.id}" data-sp="1" tabindex="0" role="button" aria-label="${esc(n.spouse)}">${av(n.spouse)}<div class="tx"><div class="nm">${esc(n.spouse)}</div><div class="sb">Spouse</div></div></div>`;
     }
     if (n.children.length) {
       h += `<button class="tog" data-tog="${n.id}" aria-label="Expand or collapse"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5l3 3 3-3"/></svg><em></em></button>`;
@@ -223,27 +227,112 @@
 
   function showPanel(n, isSpouse) {
     const c = n.color, kids = n.children, sibs = n.parent ? n.parent.children.filter((s) => s !== n) : [];
-    const pill = (p) => `<span class="pill" data-go="${p.id}">${first(p.name) === p.name ? p.name : p.name}</span>`;
-    const pathHTML = chain(n).map((p) => `<div data-go="${p.id}">${p.name}</div>`).join('');
+    const pill = (p) => `<span class="pill" data-go="${p.id}">${esc(p.name)}</span>`;
+    const pathHTML = chain(n).map((p) => `<div data-go="${p.id}">${esc(p.name)}</div>`).join('');
     panel.style.setProperty('--c', c);
     panel.innerHTML = `
       <button class="x" aria-label="Close">×</button>
       <div class="p-head">
-        <div class="p-av">${n.name[0].toUpperCase()}</div>
-        <h2>${n.name}</h2>
-        <span class="chip">Generation ${n.depth + 1}${n.branch ? ' · ' + n.branch.name + ' branch' : ''}</span>
+        <div class="p-av">${esc((n.name[0] || '?').toUpperCase())}</div>
+        <h2>${esc(n.name)}</h2>
+        <span class="chip">Generation ${n.depth + 1}${n.branch ? ' · ' + esc(n.branch.name) + ' branch' : ''}</span>
       </div>
       <div class="nums">
         <div><b>${kids.length}</b><span>Santaan</span></div>
         <div><b>${countDesc(n)}</b><span>Vanshaj</span></div>
         <div><b>${sibs.length}</b><span>Bhai-behen</span></div>
       </div>
-      ${n.spouse ? `<div class="p-sec"><h3>Jeevansathi</h3><div class="pills"><span class="pill static">♥ ${n.spouse}</span></div></div>` : ''}
+      ${n.spouse ? `<div class="p-sec"><h3>Jeevansathi</h3><div class="pills"><span class="pill static">♥ ${esc(n.spouse)}</span></div></div>` : ''}
       ${n.parent ? `<div class="p-sec"><h3>Mata-pita / Parent</h3><div class="pills">${pill(n.parent)}</div></div>` : ''}
       ${kids.length ? `<div class="p-sec"><h3>Santaan (${kids.length})</h3><div class="pills">${kids.map(pill).join('')}</div></div>` : ''}
       ${sibs.length ? `<div class="p-sec"><h3>Bhai-behen (${sibs.length})</h3><div class="pills">${sibs.map(pill).join('')}</div></div>` : ''}
-      <div class="p-sec"><h3>Vansh ki line</h3><div class="path">${pathHTML}</div></div>`;
+      <div class="p-sec"><h3>Vansh ki line</h3><div class="path">${pathHTML}</div></div>${EDIT ? editHTML(n) : ''}`;
     panel.hidden = false;
+  }
+
+  /* ---------- edit mode (owner only: open the site with #edit) ---------- */
+  function editHTML(n) {
+    return `<div class="p-sec edit"><h3>Edit</h3>
+      <label>Naam<input id="e-name" value="${esc(n.name)}" maxlength="80"></label>
+      <label>Jeevansathi (khali chhodo = hata do)<input id="e-spouse" value="${esc(n.spouse || '')}" maxlength="80"></label>
+      <div class="btns"><button data-act="save">Save</button><button data-act="addc">+ Bachcha</button>${n.parent ? '<button data-act="del" class="danger">Delete</button>' : ''}</div></div>`;
+  }
+  function ser(n) {
+    const o = { id: n.id, name: n.name };
+    if (n.spouse) o.spouse = n.spouse;
+    if (n.children.length) o.children = n.children.map(ser);
+    return o;
+  }
+  function commit(selectId) {
+    const data = ser(root);
+    try { localStorage.setItem(DRAFT, JSON.stringify(data)); } catch (_) {}
+    sel = null; load(data); render(false);
+    if (selectId && byId[selectId]) select(byId[selectId], { focus: false }); else deselect();
+  }
+  const clean = (v) => v.replace(/\s+/g, ' ').trim();
+  panel.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-act]'); if (!b || !sel) return;
+    const n = sel;
+    if (b.dataset.act === 'save') {
+      const nm = clean($('#e-name').value); if (!nm) return $('#e-name').focus();
+      n.name = nm; const sp = clean($('#e-spouse').value); if (sp) n.spouse = sp; else delete n.spouse;
+      commit(n.id);
+    } else if (b.dataset.act === 'addc') {
+      const nm = prompt('Bachche ka naam?'); if (!nm || !clean(nm)) return;
+      const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      n.children.push({ id, name: clean(nm), children: [] }); commit(id);
+    } else if (b.dataset.act === 'del') {
+      const c = countDesc(n);
+      if (!confirm(`"${n.name}" ko delete karna hai?` + (c ? `\nUnke ${c} vanshaj bhi hat jayenge.` : ''))) return;
+      n.parent.children = n.parent.children.filter((x) => x !== n); commit(n.parent.id);
+    }
+  });
+  async function sha(s) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('bhadke-tree:' + s));
+    return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('');
+  }
+  // Asks for the edit password before anything is exported ("finishing" an edit).
+  async function unlocked() {
+    if (!(window.crypto && crypto.subtle)) { alert('Password check ke liye https (GitHub Pages) chahiye.'); return false; }
+    const want = window.PASS_HASH;
+    if (!want) {
+      const pw = prompt('Abhi koi password set nahi hai. Naya password chuno (kam se kam 6 akshar):');
+      if (!pw) return false;
+      if (pw.length < 6) { alert('Password bahut chhota hai.'); return false; }
+      const line = `window.PASS_HASH = '${await sha(pw)}';`;
+      prompt('Is line ko GitHub par auth.js me paste karke commit karo, phir password active ho jayega:', line);
+      return false;
+    }
+    const pw = prompt('Edit password daalo:');
+    if (pw === null) return false;
+    if ((await sha(pw)) === want) return true;
+    alert('Galat password.'); return false;
+  }
+  function exportData() {
+    return '// Bhadke family data — generated from edit mode.\nwindow.FAMILY = ' + JSON.stringify(ser(root), null, 2) + ';\n';
+  }
+  if (EDIT) {
+    const bar = document.createElement('div');
+    bar.className = 'editbar';
+    bar.innerHTML = `<b>Edit mode</b><span>Badlav sirf aapke browser me hain. Sab ko dikhane ke liye Export karke data.js GitHub par daalo.</span>
+      <button data-bar="exp">Export data.js</button><button data-bar="copy">Copy</button><button data-bar="reset">Reset</button>`;
+    document.body.appendChild(bar);
+    bar.addEventListener('click', async (e) => {
+      const k = e.target.closest('[data-bar]'); if (!k) return;
+      if (!(await unlocked())) return;
+      if (k.dataset.bar === 'exp') {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([exportData()], { type: 'text/javascript' }));
+        a.download = 'data.js'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      } else if (k.dataset.bar === 'copy') {
+        (navigator.clipboard ? navigator.clipboard.writeText(exportData()) : Promise.reject()).then(
+          () => { k.textContent = 'Copied!'; setTimeout(() => (k.textContent = 'Copy'), 1500); },
+          () => prompt('Ye copy karo:', exportData()));
+      } else if (confirm('Saare draft badlav hata ke original data.js par wapas jaana hai?')) {
+        try { localStorage.removeItem(DRAFT); } catch (_) {}
+        sel = null; panel.hidden = true; load(window.FAMILY); render(false); fit(true);
+      }
+    });
   }
 
   /* ---------- interactions ---------- */
@@ -291,11 +380,11 @@
     hits = [];
     all.forEach((n) => {
       if (n.name.toLowerCase().includes(q)) hits.push({ n, label: n.name, sub: `Generation ${n.depth + 1}` });
-      if (n.spouse && n.spouse.toLowerCase().includes(q)) hits.push({ n, label: n.spouse, sub: `${first(n.name)} ke jeevansathi` });
+      if (n.spouse && n.spouse.toLowerCase().includes(q)) hits.push({ n, label: n.spouse, sub: `${esc(first(n.name))} ke jeevansathi` });
     });
     hi = 0;
     resEl.innerHTML = hits.length
-      ? hits.slice(0, 12).map((h, i) => `<li data-i="${i}" class="${i === 0 ? 'on' : ''}">${h.label}<small>${h.sub}</small></li>`).join('')
+      ? hits.slice(0, 12).map((h, i) => `<li data-i="${i}" class="${i === 0 ? 'on' : ''}">${esc(h.label)}<small>${h.sub}</small></li>`).join('')
       : '<li class="none">Koi nahi mila</li>';
     resEl.hidden = false;
   }
@@ -330,12 +419,17 @@
   let lw = innerWidth; addEventListener('resize', () => { if (innerWidth !== lw) { lw = innerWidth; fit(false); } });
 
   /* ---------- stats ---------- */
-  const people = all.length + all.filter((n) => n.spouse).length;
-  const branches = new Set(all.filter((n) => n.branch).map((n) => n.branch.i)).size;
-  $('#stats').innerHTML = [[people, 'Sadasya'], [maxDepth + 1, 'Peedhiyan'], [branches, 'Shakha']]
-    .map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  function updateStats() {
+    const people = all.length + all.filter((n) => n.spouse).length;
+    const branches = new Set(all.filter((n) => n.branch).map((n) => n.branch.i)).size;
+    $('#stats').innerHTML = [[people, 'Members'], [maxDepth + 1, 'Generations'], [branches, 'Branches']]
+      .map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  }
 
   /* ---------- go ---------- */
+  let start = window.FAMILY;
+  if (EDIT) { try { const d = localStorage.getItem(DRAFT); if (d) start = JSON.parse(d); } catch (_) {} }
+  load(start);
   render(true);
   fit(false);
   if (innerWidth < 720) { // phones: start readable, centred on the top of the tree
