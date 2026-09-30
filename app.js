@@ -171,7 +171,7 @@
     if (e.target.closest('.tog')) return;
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = 0;
     if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
-    vp.classList.add('drag'); hideHint();
+    vp.classList.add('drag');
   });
   addEventListener('pointermove', (e) => {
     const p = ptrs.get(e.pointerId); if (!p) return;
@@ -190,7 +190,7 @@
   const up = (e) => { ptrs.delete(e.pointerId); pinch = 0; if (!ptrs.size) vp.classList.remove('drag'); };
   addEventListener('pointerup', up); addEventListener('pointercancel', up);
   vp.addEventListener('wheel', (e) => {
-    e.preventDefault(); hideHint();
+    e.preventDefault();
     zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0016)), e.clientX, e.clientY, false);
   }, { passive: false });
 
@@ -374,9 +374,6 @@
   setBg();
   $('#bgbtn').onclick = () => { bgi = (bgi + 1) % 5; setBg(); try { localStorage.setItem('ft-bg', bgi); } catch (_) {} };
 
-  let hintGone = false;
-  function hideHint() { if (!hintGone) { hintGone = true; $('#hint').classList.add('off'); } }
-  setTimeout(hideHint, 9000);
 
   /* ---------- search ---------- */
   let hits = [], hi = 0;
