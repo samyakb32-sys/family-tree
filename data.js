@@ -20,7 +20,7 @@ window.FAMILY = {
             id: 'zituzi', name: 'Zituzi',
             children: [
               { id: 'dipak', name: 'Dipak', children: [{ id: 'samyak', name: 'Samyak Bhadke' }] },
-              { id: 'devindra', name: 'Devindra', spouse: 'Sommer Patil' }
+              { id: 'devindra', name: 'Devindra', children: [{ id: 'sameer', name: 'Sameer Patil' }] }
             ]
           },
           {
@@ -33,7 +33,7 @@ window.FAMILY = {
         ]
       },
       {
-        id: 'mulka', name: 'Mulka Bhadke',
+        id: 'mulka', name: 'Mulka Narayan Bhadke',
         children: [
           { id: 'jagannath', name: 'Jagannath' },
           { id: 'vaman', name: 'Vaman' }
