@@ -7,7 +7,7 @@
 
   const $ = (s) => document.querySelector(s);
   const vp = $('#vp'), world = $('#world'), cardsEl = $('#cards'), linesEl = $('#lines');
-  const panel = $('#panel'), qEl = $('#q'), resEl = $('#results');
+  const qEl = $('#q'), resEl = $('#results');
   cardsEl.style.setProperty('--cw', CW + 'px');
   cardsEl.style.setProperty('--ch', CH + 'px');
 
@@ -118,13 +118,26 @@
     applyFocus();
   }
 
+  const ICON = {
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/>',
+    addc: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M19 8v6M16 11h6"/>',
+    addsp: '<path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/>',
+    del: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+  };
+  const TIP = { edit: 'Naam badlo', editsp: 'Naam badlo', addc: 'Bachcha jodo', addsp: 'Jeevansathi jodo', delsp: 'Jeevansathi hatao', del: 'Delete karo' };
+  // edit mode only: small action bar sitting on top of each card
+  const acts = (cls, list) => !EDIT ? '' : `<div class="acts ${cls}">${list.map(([a, ic]) =>
+    `<button data-act="${a}" title="${TIP[a]}" aria-label="${TIP[a]}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[ic]}</svg></button>`).join('')}</div>`;
+
   function unitHTML(n) {
     const lvl = `<div class="sb">Generation ${n.depth + 1}</div>`;
     const av = (s) => `<div class="av">${esc((s.trim()[0] || '?').toUpperCase())}</div>`;
     let h = `<div class="card" data-id="${n.id}" tabindex="0" role="button" aria-label="${esc(n.name)}">${av(n.name)}<div class="tx"><div class="nm">${esc(n.name)}</div>${lvl}</div></div>`;
+    h += acts('', [['edit', 'edit'], ['addc', 'addc'], ...(n.spouse ? [] : [['addsp', 'addsp']]), ...(n.parent ? [['del', 'del']] : [])]);
     if (n.spouse) {
       h += `<div class="ring"><i>♥</i></div>`;
       h += `<div class="card spouse" data-id="${n.id}" data-sp="1" tabindex="0" role="button" aria-label="${esc(n.spouse)}">${av(n.spouse)}<div class="tx"><div class="nm">${esc(n.spouse)}</div><div class="sb">Spouse</div></div></div>`;
+      h += acts('sp', [['editsp', 'edit'], ['addc', 'addc'], ['delsp', 'del']]);
     }
     if (n.children.length) {
       h += `<button class="tog" data-tog="${n.id}" aria-label="Expand or collapse"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3.5l3 3 3-3"/></svg><em></em></button>`;
@@ -157,10 +170,9 @@
     apply(animate);
   }
   function focusOn(n) {
-    const pw = panel.hidden || innerWidth < 720 ? 0 : 356;
     const k = Math.max(cam.k, innerWidth < 720 ? 0.75 : 0.95);
     cam.k = Math.min(k, 1.2);
-    cam.x = (innerWidth - pw) / 2 - n.cx * cam.k;
+    cam.x = innerWidth / 2 - n.cx * cam.k;
     cam.y = innerHeight * (innerWidth < 720 ? 0.3 : 0.45) - (n.ty + CH / 2) * cam.k;
     apply(true);
   }
@@ -168,7 +180,7 @@
   // pan + pinch
   const ptrs = new Map(); let moved = 0, pinch = 0;
   vp.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('.tog')) return;
+    if (e.target.closest('.tog')) { moved = 0; return; }
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = 0;
     if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
     vp.classList.add('drag');
@@ -220,27 +232,12 @@
     let changed = false;
     for (let p = n.parent; p; p = p.parent) if (p.collapsed) { p.collapsed = false; changed = true; }
     if (changed) render(false);
-    showPanel(n); applyFocus();
+    applyFocus();
     if (opts.focus !== false) focusOn(n);
   }
-  function deselect() { sel = null; panel.hidden = true; applyFocus(); }
-
-  // The details panel is only used by edit mode (#edit); visitors just get the path highlight.
-  function showPanel(n) {
-    if (!EDIT) return;
-    panel.style.setProperty('--c', n.color);
-    panel.innerHTML = `<button class="x" aria-label="Close">×</button>
-      <div class="p-head"><h2>${esc(n.name)}</h2></div>${editHTML(n)}`;
-    panel.hidden = false;
-  }
+  function deselect() { sel = null; applyFocus(); }
 
   /* ---------- edit mode (owner only: open the site with #edit) ---------- */
-  function editHTML(n) {
-    return `<div class="p-sec edit"><h3>Edit</h3>
-      <label>Naam<input id="e-name" value="${esc(n.name)}" maxlength="80"></label>
-      <label>Jeevansathi (khali chhodo = hata do)<input id="e-spouse" value="${esc(n.spouse || '')}" maxlength="80"></label>
-      <div class="btns"><button data-act="save">Save</button><button data-act="addc">+ Bachcha</button>${n.parent ? '<button data-act="del" class="danger">Delete</button>' : ''}</div></div>`;
-  }
   function ser(n) {
     const o = { id: n.id, name: n.name };
     if (n.spouse) o.spouse = n.spouse;
@@ -248,29 +245,33 @@
     return o;
   }
   function commit(selectId) {
-    const data = ser(root);
+    const data = ser(root), shut = new Set(all.filter((n) => n.collapsed).map((n) => n.id));
     try { localStorage.setItem(DRAFT, JSON.stringify(data)); } catch (_) {}
-    sel = null; load(data); render(false);
-    if (selectId && byId[selectId]) select(byId[selectId], { focus: false }); else deselect();
+    sel = null; load(data); all.forEach((n) => (n.collapsed = shut.has(n.id))); render(false);
+    if (selectId && byId[selectId]) select(byId[selectId], { focus: false });
   }
-  const clean = (v) => v.replace(/\s+/g, ' ').trim();
-  panel.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-act]'); if (!b || !sel) return;
-    const n = sel;
-    if (b.dataset.act === 'save') {
-      const nm = clean($('#e-name').value); if (!nm) return $('#e-name').focus();
-      n.name = nm; const sp = clean($('#e-spouse').value); if (sp) n.spouse = sp; else delete n.spouse;
+  const ask = (msg, val) => { const v = prompt(msg, val); return v === null ? '' : v.replace(/\s+/g, ' ').trim().slice(0, 80); };
+  function editAct(act, n) {
+    if (act === 'edit' || act === 'editsp') {
+      const nm = ask('Naam?', act === 'edit' ? n.name : n.spouse); if (!nm) return;
+      if (act === 'edit') n.name = nm; else n.spouse = nm;
       commit(n.id);
-    } else if (b.dataset.act === 'addc') {
-      const nm = prompt('Bachche ka naam?'); if (!nm || !clean(nm)) return;
+    } else if (act === 'addc') {
+      const nm = ask('Bachche ka naam?'); if (!nm) return;
       const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-      n.children.push({ id, name: clean(nm), children: [] }); commit(id);
-    } else if (b.dataset.act === 'del') {
+      n.children.push({ id, name: nm, children: [] }); commit(id);
+    } else if (act === 'addsp') {
+      const nm = ask('Jeevansathi ka naam?'); if (!nm) return;
+      n.spouse = nm; commit(n.id);
+    } else if (act === 'delsp') {
+      if (!confirm(`"${n.spouse}" ko hata dena hai?`)) return;
+      delete n.spouse; commit(n.id);
+    } else if (act === 'del') {
       const c = countDesc(n);
       if (!confirm(`"${n.name}" ko delete karna hai?` + (c ? `\nUnke ${c} vanshaj bhi hat jayenge.` : ''))) return;
       n.parent.children = n.parent.children.filter((x) => x !== n); commit(n.parent.id);
     }
-  });
+  }
   async function sha(s) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('bhadke-tree:' + s));
     return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -298,7 +299,7 @@
   if (EDIT) {
     const bar = document.createElement('div');
     bar.className = 'editbar';
-    bar.innerHTML = `<b>Edit mode</b><span>Badlav sirf aapke browser me hain. Sab ko dikhane ke liye Export karke data.js GitHub par daalo.</span>
+    bar.innerHTML = `<b>Edit mode</b><span>Har card ke upar buttons hain: naam badlo, bachcha jodo, jeevansathi jodo, delete. Badlav sirf aapke browser me hain — sab ko dikhane ke liye Export karke data.js GitHub par daalo.</span>
       <button data-bar="exp">Export data.js</button><button data-bar="copy">Copy</button><button data-bar="reset">Reset</button>`;
     document.body.appendChild(bar);
     bar.addEventListener('click', async (e) => {
@@ -314,7 +315,7 @@
           () => prompt('Ye copy karo:', exportData()));
       } else if (confirm('Saare draft badlav hata ke original data.js par wapas jaana hai?')) {
         try { localStorage.removeItem(DRAFT); } catch (_) {}
-        sel = null; panel.hidden = true; load(window.FAMILY); render(false); fit(true);
+        sel = null; load(window.FAMILY); render(false); fit(true);
       }
     });
   }
@@ -322,6 +323,8 @@
   /* ---------- interactions ---------- */
   cardsEl.addEventListener('click', (e) => {
     if (moved > 5) return;
+    const act = e.target.closest('[data-act]');
+    if (act) return editAct(act.dataset.act, byId[act.closest('.unit').dataset.id]);
     const tog = e.target.closest('.tog');
     if (tog) {
       const n = byId[tog.dataset.tog]; n.collapsed = !n.collapsed;
@@ -334,9 +337,6 @@
     if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); select(byId[e.target.dataset.id]); }
   });
   vp.addEventListener('click', (e) => { if (moved <= 5 && !e.target.closest('.unit')) deselect(); });
-  panel.addEventListener('click', (e) => {
-    if (e.target.closest('.x')) return deselect();
-  });
 
   $('#zin').onclick = () => zoomAt(1.3, innerWidth / 2, innerHeight / 2, true);
   $('#zout').onclick = () => zoomAt(1 / 1.3, innerWidth / 2, innerHeight / 2, true);
