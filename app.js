@@ -20,7 +20,7 @@
   function load(data) {
     byId = {}; maxDepth = 0; shown.clear(); cardsEl.innerHTML = '';
     root = JSON.parse(JSON.stringify(data)); prep(root, null, 0, null);
-    all = Object.values(byId); updateStats();
+    all = Object.values(byId); renderInfo();
   }
   function prep(n, parent, depth, branch) {
     n.parent = parent; n.depth = depth; n.children = n.children || [];
@@ -155,8 +155,9 @@
     vp.style.backgroundSize = `${28 * cam.k}px ${28 * cam.k}px`;
     vp.style.backgroundPosition = `${cam.x}px ${cam.y}px`;
   }
+  const topOff = () => Math.max(innerWidth < 720 ? 130 : 84, $('#top').getBoundingClientRect().bottom + 8);
   function fit(animate = true) {
-    const vw = innerWidth, vh = innerHeight, top = innerWidth < 720 ? 130 : 84, bot = innerWidth < 720 ? 70 : 20;
+    const vw = innerWidth, vh = innerHeight, top = topOff(), bot = innerWidth < 720 ? 70 : 20;
     const rm = vw < 720 ? 0 : 76;
     const k = Math.min((vw - 20 - rm) / W, (vh - top - bot) / H, 1.15);
     cam.k = Math.max(K_MIN, k);
@@ -369,6 +370,7 @@
   }
   function go(i) {
     const h = hits[i]; if (!h) return;
+    view('tree');
     resEl.hidden = true; qEl.value = ''; qEl.blur();
     select(h.n);
     const cards = h.n.el && h.n.el.querySelectorAll('.card');
@@ -393,17 +395,88 @@
     else if (e.key === '+' || e.key === '=') $('#zin').click();
     else if (e.key === '-') $('#zout').click();
     else if (e.key === '0') fit(true);
-    else if (e.key === 'Escape') deselect();
+    else if (e.key === 'Escape') { view('tree'); deselect(); }
   });
-  let lw = innerWidth; addEventListener('resize', () => { if (innerWidth !== lw) { lw = innerWidth; fit(false); } });
+  let lw = innerWidth; addEventListener('resize', () => { if (!info.hidden) info.style.paddingTop = padTop() + 'px'; if (innerWidth !== lw) { lw = innerWidth; fit(false); } });
 
-  /* ---------- stats ---------- */
-  function updateStats() {
-    const people = all.length + all.filter((n) => n.spouse).length;
-    const branches = new Set(all.filter((n) => n.branch).map((n) => n.branch.i)).size;
-    $('#stats').innerHTML = [[people, 'Members'], [maxDepth + 1, 'Generations'], [branches, 'Branches']]
-      .map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+  /* ---------- tree analysis: Path / Analysis / Generations / Statistics ---------- */
+  const ST = window.STUDENT || {};
+  const GEN = [BRANCH[2], BRANCH[3], BRANCH[1], BRANCH[4], BRANCH[0], BRANCH[5]];
+  const ord = (n) => n + (['th', 'st', 'nd', 'rd'][n] || 'th');
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const icon = (p) => `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const section = (id, title, sub, body) => { $('#' + id).innerHTML = `<h2>${title}</h2><p class="sub">${sub}</p>${body}`; };
+  const acard = (c, title, desc, body) => `<div class="acard" style="--c:${c}"><h3><i></i>${title}</h3><p>${desc}</p>${body}</div>`;
+
+  $('#who').innerHTML = ST.name
+    ? `<span class="pill"><em>Name:</em><b>${esc(ST.name)}</b>${ST.usn ? `<span class="sep"></span><em>USN:</em><code>${esc(ST.usn)}</code>` : ''}</span><span class="pill tae">TAE-II DMGT</span>`
+    : '<span class="pill tae">TAE-II DMGT</span>';
+
+  // everything below is computed from the tree itself, so it follows edits made in #edit mode
+  function renderInfo() {
+    const me = byId[ST.meId], path = me ? chain(me) : [], on = new Set(path.map((n) => n.id)), edges = path.length - 1;
+    const leaves = all.filter((n) => !n.children.length), inner = all.filter((n) => n.children.length);
+    const maxDeg = Math.max(0, ...inner.map((n) => n.children.length));
+    const levels = Array.from({ length: maxDepth + 1 }, (_, d) => all.filter((n) => n.depth === d));
+    const longest = chain(all.find((n) => n.depth === maxDepth));
+    const arrow = (p) => p.map((n) => esc(first(n.name))).join(' → ');
+    const names = (l) => l.map((n) => esc(n.name)).join(', ');
+    const chip = (n, x = '') => `<span class="chip${on.has(n.id) ? ' on' : ''}">${esc(n.name)}${x}</span>`;
+    const spouses = all.filter((n) => n.spouse).length;
+
+    section('sec-path', me ? `My Path — Root to ${esc(first(me.name))}` : 'My Path',
+      me ? `The unique path from the root node to me, traversing ${plural(edges, 'edge')} through ${plural(path.length, 'node')}` : 'student.js me meId ko data.js ke kisi person ke id par set karo.',
+      `<div class="chain">${path.map((n, i) => `${i ? `<div class="edge"><i></i>Edge ${i}<i></i></div>` : ''}<div class="pnode"><b>${esc(n.name)}</b><small>Level ${n.depth}</small></div>`).join('')}</div>`);
+
+    section('sec-analysis', 'Tree Analysis',
+      'Mathematical properties computed from the tree data structure' + (spouses ? '<br><small>Jeevansathi (spouse) tree ka node nahi hote — sirf vanshaj nodes count hote hain.</small>' : ''),
+      `<div class="grid">${[
+        acard('#5b9bff', 'Root Node', 'The topmost node with no parent. Every tree has exactly one root.', `<div class="box mono">${esc(root.name)} (Level 0)</div>`),
+        acard('#b980ff', 'Height of Tree', 'The length of the longest root-to-leaf path, counted in edges.', `<div class="box"><div class="big">${maxDepth}</div><small>Path: ${arrow(longest)} = ${plural(maxDepth, 'edge')}</small></div>`),
+        acard('#4dd0e1', 'Levels', 'Distance from the root. Root = Level 0.', `<div class="box">${levels.map((l, d) => `<div class="lv"><code>Level ${d}:</code> ${names(l)}</div>`).join('')}</div>`),
+        acard('#ff9f43', 'Degree of Internal Nodes', `The number of children each internal node has. Max degree = ${maxDeg}.`, `<div class="box scroll">${inner.map((n) => `<div class="row${on.has(n.id) ? ' on' : ''}"><span>${esc(n.name)}</span><em>degree(${n.children.length})</em></div>`).join('')}</div>`),
+        acard('#2fd1a8', 'Leaf Nodes <small>(degree = 0)</small>', `Nodes with no children. Count: ${leaves.length}`, `<div class="box chips">${leaves.map((n) => chip(n, n === me ? ' (ME)' : '')).join('')}</div>`),
+        acard('#ff6b81', 'Internal Nodes <small>(degree &gt; 0)</small>', `Nodes with at least one child. Count: ${inner.length}`, `<div class="box chips">${inner.map((n) => chip(n, ` (${n === root ? 'Root' : 'Internal Node'}, degree ${n.children.length})`)).join('')}</div>`),
+        acard('#8ea2ff', 'Sibling Groups', 'Nodes sharing the same parent are siblings.', `<div class="box">${inner.filter((n) => n.children.length > 1).map((n) => `<div class="sg">Parent: <b>${esc(n.name)}</b><br><span>Siblings: ${names(n.children)}</span></div>`).join('')}</div>`),
+        me ? acard(GOLD, 'My Path (Root to ME)', `The unique path from the root to ${esc(me.name)}. Length = ${plural(edges, 'edge')}.`, `<div class="box"><div class="mono"><b>${arrow(path)}</b></div>${path.slice(1).map((n, i) => `<small>Edge ${i + 1}: ${esc(first(path[i].name))} → ${esc(first(n.name))}</small>`).join('<br>')}</div>`) : '',
+      ].join('')}</div>`);
+
+    section('sec-gen', 'Family Generations', 'Each level of the tree represents a generation',
+      levels.map((l, d) => `<div class="gen" style="--c:${GEN[d % GEN.length]}"><header><h3><i></i>${ord(d + 1)} Generation</h3><span><code class="lvl">Level ${d}</code><small>${plural(l.length + l.filter((n) => n.spouse).length, 'member')}</small></span></header><div class="chips">${
+        l.map((n) => chip(n, n === me ? '<b class="me">ME</b>' : on.has(n.id) ? ' •' : '') + (n.spouse ? `<span class="chip sp">♥ ${esc(n.spouse)}</span>` : '')).join('')}</div></div>`).join(''));
+
+    const tiles = [
+      ['#5b9bff', all.length, 'Total Nodes', 'Family members in the tree', '<circle cx="12" cy="8" r="3"/><circle cx="5.5" cy="10" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M6 19c0-3.3 2.7-5 6-5s6 1.7 6 5"/>'],
+      ['#2fd1a8', leaves.length, 'Leaf Nodes', 'Members with no children', '<circle cx="12" cy="12" r="3"/>'],
+      ['#ff9f43', inner.length, 'Internal Nodes', 'Members with children', '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 12h5l1 2h4l1-2h5"/>'],
+      ['#b980ff', maxDepth, 'Tree Height', 'Longest root-to-leaf path (edges)', '<path d="M4 6h10M4 11h7M4 16h5M18 20V6m0 0l-3 3m3-3l3 3"/>'],
+      ['#4dd0e1', maxDepth + 1, 'Generations', `Total depth levels (Level 0 to Level ${maxDepth})`, '<path d="M4 7h16M4 12h16M4 17h16"/>'],
+      ['#ff6b81', maxDeg, 'Max Degree', 'Most children any node has', '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 16v-3M12 16V9M16 16v-5"/>'],
+      me && [GOLD, me.depth, 'My Level', `${esc(first(me.name))}'s level in the tree`, '<path d="M12 21s-6-5.3-6-10a6 6 0 0112 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>'],
+      ['#ff8fb0', all.length + spouses, 'Members', 'Nodes + jeevansathi (spouses)', ICON.addsp],
+    ].filter(Boolean);
+    section('sec-stats', 'Family Statistics', 'Auto-calculated metrics from the family tree data structure',
+      `<div class="tiles">${tiles.map(([c, v, l, d, p]) => `<div class="tile" style="--c:${c}">${icon(p)}<b>${v}</b><strong>${l}</strong><small>${d}</small></div>`).join('')}</div>`);
   }
+
+  /* ---------- section switcher (header nav) ---------- */
+  const info = $('#info'), navEl = $('#nav');
+  const padTop = () => $('#top').offsetHeight + 38;
+  const setNav = (id) => navEl.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === id));
+  function view(id) {
+    const tree = id === 'tree', was = info.hidden;
+    info.hidden = tree; document.body.classList.toggle('info-on', !tree); setNav(id);
+    if (tree) return;
+    info.style.paddingTop = padTop() + 'px';
+    info.scrollTo({ top: $('#' + id).offsetTop - padTop(), behavior: was ? 'auto' : 'smooth' });
+  }
+  navEl.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) view(b.dataset.v); });
+  info.addEventListener('scroll', () => {
+    const y = info.scrollTop + padTop() + 40; let cur = info.querySelector('.sec');
+    info.querySelectorAll('.sec').forEach((s) => { if (s.offsetTop <= y) cur = s; });
+    if (info.scrollTop + info.clientHeight >= info.scrollHeight - 4) cur = info.querySelector('.sec:last-child');
+    setNav(cur.id);
+  });
 
   /* ---------- go ---------- */
   let start = window.FAMILY;
@@ -412,7 +485,7 @@
   render(true);
   fit(false);
   if (innerWidth < 720) { // phones: start readable, centred on the top of the tree
-    cam.k = 0.8; cam.x = innerWidth / 2 - root.cx * cam.k; cam.y = 130 - PAD * cam.k; apply(false);
+    cam.k = 0.8; cam.x = innerWidth / 2 - root.cx * cam.k; cam.y = topOff() - PAD * cam.k; apply(false);
   }
   window.__tree = { select: (id) => select(byId[id]), byId };
 })();
