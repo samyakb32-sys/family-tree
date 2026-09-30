@@ -264,13 +264,3 @@ h1 { font: 700 21px/1.1 var(--serif); letter-spacing: .2px; }
 }
 .editbar button:hover { background: var(--gold); color: #1a1305; border-color: var(--gold); }
 @media (max-width: 720px) { .editbar { bottom: 70px; left: 10px; right: 10px; max-width: none; } }
-
-/* ---------- background styles (button cycles through them) ---------- */
-:root[data-bg="1"] { --bg: #06141a; --bg2: #0c222b; --bgimg: radial-gradient(900px 600px at 10% 0%, rgba(47, 209, 168, .24), transparent 60%), radial-gradient(900px 650px at 95% 100%, rgba(185, 128, 255, .2), transparent 60%); }
-:root[data-bg="2"] { --bg: #170b14; --bg2: #24121f; --bgimg: radial-gradient(1000px 650px at 50% 0%, rgba(255, 140, 90, .22), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgba(255, 70, 130, .16), transparent 60%); }
-:root[data-bg="3"] { --bg: #0a140d; --bg2: #11211a; --bgimg: radial-gradient(1000px 650px at 80% 0%, rgba(120, 220, 120, .18), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgba(233, 185, 73, .12), transparent 60%); }
-:root[data-bg="4"] { --bg: #000; --bg2: #0d0d0d; --bgimg: none; }
-:root[data-theme="light"][data-bg="1"] { --bg: #e9f5f2; --bg2: #d8ece7; --bgimg: radial-gradient(900px 600px at 10% 0%, rgba(47, 209, 168, .28), transparent 60%), radial-gradient(900px 650px at 95% 100%, rgba(185, 128, 255, .2), transparent 60%); }
-:root[data-theme="light"][data-bg="2"] { --bg: #fdf0e8; --bg2: #f7e1d5; --bgimg: radial-gradient(1000px 650px at 50% 0%, rgba(255, 140, 90, .28), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgba(255, 70, 130, .16), transparent 60%); }
-:root[data-theme="light"][data-bg="3"] { --bg: #eef5e8; --bg2: #e0ecd6; --bgimg: radial-gradient(1000px 650px at 80% 0%, rgba(120, 200, 100, .3), transparent 60%); }
-:root[data-theme="light"][data-bg="4"] { --bg: #ffffff; --bg2: #f3f3f3; --bgimg: none; }

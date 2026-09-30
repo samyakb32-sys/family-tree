@@ -351,13 +351,6 @@
     try { localStorage.setItem('ft-theme', t); } catch (_) {}
   };
 
-  let bgi = 0;
-  try { bgi = +localStorage.getItem('ft-bg') || 0; } catch (_) {}
-  const setBg = () => { if (bgi) docEl.dataset.bg = bgi; else delete docEl.dataset.bg; };
-  setBg();
-  $('#bgbtn').onclick = () => { bgi = (bgi + 1) % 5; setBg(); try { localStorage.setItem('ft-bg', bgi); } catch (_) {} };
-
-
   /* ---------- search ---------- */
   let hits = [], hi = 0;
   function search() {
