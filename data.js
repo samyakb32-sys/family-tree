@@ -19,8 +19,8 @@ window.FAMILY = {
           {
             id: 'zituzi', name: 'Zituzi',
             children: [
-              { id: 'dipak', name: 'Dipak', children: [{ id: 'samyak', name: 'Samyak Bhadke' }] },
-              { id: 'devindra', name: 'Devindra', children: [{ id: 'sameer', name: 'Sameer Patil' }] }
+              { id: 'dipak', name: 'Dipak Bhadke', spouse: 'Lata Bhadke', children: [{ id: 'samyak', name: 'Samyak Bhadke' }] },
+              { id: 'devindra', name: 'Devendra Patil', spouse: 'Sagar Patil', children: [{ id: 'sameer', name: 'Sameer Patil' }] }
             ]
           },
           {
