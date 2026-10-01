@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bhadke Family Tree as a Graph</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root { --ink:#222; --mid:#666; --line:#3b3b3b; --panel:#f3f3f3; --dark:#4b4b4b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #d9d9d9; font-family: Inter, system-ui, 'Segoe UI', Arial, sans-serif; color: var(--ink); }
+  .sheet { width: 1800px; height: 1273px; margin: 0 auto; background: #fff; padding: 36px 44px; position: relative; overflow: hidden; }
+  @page { size: 1800px 1273px; margin: 0; }
+  @media print { body { background: #fff; } .sheet { margin: 0; } }
+
+  .title { position: relative; width: 980px; margin: 0 auto; padding: 18px 0 14px; border-radius: 16px; text-align: center;
+           background: linear-gradient(#5a5a5a, #3f3f3f); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+  .title h1 { font-size: 54px; font-weight: 800; letter-spacing: .3px; line-height: 1.05; }
+  .title p { margin-top: 6px; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .title p::before, .title p::after { content: ''; width: 90px; height: 2px; background: #fff; opacity: .8; }
+  .leaf { position: absolute; top: 50%; width: 56px; height: 56px; transform: translateY(-50%); opacity: .9; }
+  .leaf.l { left: 34px; } .leaf.r { right: 34px; transform: translateY(-50%) scaleX(-1); }
+  .who { margin: 14px auto 0; width: max-content; display: flex; gap: 14px; font-size: 18px; font-weight: 600; }
+  .who span { padding: 6px 18px; border: 2px solid var(--dark); border-radius: 99px; background: var(--panel); }
+  .who b { font-weight: 800; }
+
+  .main { display: grid; grid-template-columns: 1fr 590px; gap: 30px; margin-top: 8px; height: 990px; }
+  #g { width: 100%; height: 100%; display: block; }
+
+  .panel { border: 2.5px solid var(--dark); border-radius: 14px; overflow: hidden; background: #fff; margin-bottom: 16px; }
+  .panel > h2 { background: var(--dark); color: #fff; font-size: 20px; font-weight: 700; padding: 8px 16px; display: flex; gap: 10px; align-items: center; }
+  .panel > h2 svg { width: 24px; height: 24px; flex: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th { text-align: left; font-weight: 700; color: var(--mid); padding: 8px 12px; background: var(--panel); font-size: 14px; }
+  td { padding: 4.5px 12px; white-space: nowrap; border-top: 1px solid #dcdcdc; }
+  td.n, th.n { text-align: center; width: 58px; }
+  tr.me td { background: #e6e6e6; font-weight: 700; }
+  .path { padding: 12px 14px; font-size: 18px; font-weight: 600; text-align: center; line-height: 1.5; }
+  .path small { display: block; font-size: 15px; color: var(--mid); font-weight: 500; }
+  .obs { padding: 10px 16px 10px 34px; font-size: 14.5px; line-height: 1.42; }
+  .obs li { margin-bottom: 4px; }
+
+  .foot { position: absolute; left: 44px; right: 650px; bottom: 30px; display: flex; align-items: center; justify-content: space-between; }
+  .legend { border: 2.5px solid var(--dark); border-radius: 14px; padding: 10px 18px 10px; position: relative; display: grid; grid-template-columns: auto auto; gap: 6px 28px; font-size: 15px; }
+  .legend h3 { position: absolute; top: -14px; left: 14px; background: #fff; padding: 0 10px; font-size: 18px; font-weight: 700; font-style: italic; }
+  .legend div { display: flex; align-items: center; gap: 10px; }
+  .legend i { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); }
+  .legend svg { width: 44px; height: 14px; }
+  .pill { padding: 12px 34px; border-radius: 99px; background: var(--dark); color: #fff; font-size: 22px; font-weight: 600; letter-spacing: .3px; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="title">
+    <svg class="leaf l" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M10 56C14 36 26 18 52 10c2 22-8 38-30 42M10 56c10-12 18-20 30-30"/></svg>
+    <h1>Family Tree as a Graph</h1>
+    <p>Discrete Mathematics &amp; Graph Theory</p>
+    <svg class="leaf r" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M10 56C14 36 26 18 52 10c2 22-8 38-30 42M10 56c10-12 18-20 30-30"/></svg>
+  </div>
+  <div class="who" id="who"></div>
+
+  <div class="main">
+    <svg id="g" xmlns="http://www.w3.org/2000/svg"></svg>
+    <aside>
+      <section class="panel"><h2><svg viewBox="0 0 24 24" fill="#fff"><circle cx="8" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M2 20c0-4 3-6 6-6s6 2 6 6zM14.5 20c.2-3 2-5 4.5-5 2 0 3.5 1.5 3.5 5z"/></svg><span id="t-title"></span></h2>
+        <table id="tbl"></table></section>
+      <section class="panel"><h2><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-6 4-8 9-8h6M15 5l5 5-5 5"/></svg>Shortest Path: You to Oldest Ancestor</h2>
+        <div class="path" id="path"></div></section>
+      <section class="panel"><h2><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"/></svg>Key Observations</h2>
+        <ul class="obs" id="obs"></ul></section>
+    </aside>
+  </div>
+
+  <div class="foot">
+    <div class="legend"><h3>Legend</h3>
+      <div><i style="background:#4d4d4d"></i>= You</div>
+      <div><svg viewBox="0 0 44 14"><line x1="0" y1="7" x2="44" y2="7" stroke="#333" stroke-width="2.4"/></svg>= Marriage</div>
+      <div><i style="background:#bdbdbd"></i>= Direct ancestor</div>
+      <div><svg viewBox="0 0 44 14"><line x1="0" y1="7" x2="38" y2="7" stroke="#333" stroke-width="2.4"/><path d="M30 2l9 5-9 5z" fill="#333"/></svg>= Parent – Child</div>
+      <div><i style="background:#ececec"></i>= Relative / spouse</div>
+      <div><svg viewBox="0 0 44 14"><line x1="0" y1="7" x2="44" y2="7" stroke="#333" stroke-width="2" stroke-dasharray="5 4"/></svg>= Generation level</div>
+    </div>
+    <div class="pill">Family &nbsp;•&nbsp; Relationships &nbsp;•&nbsp; Graph Theory</div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="student.js"></script>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const ST = window.STUDENT || {}, ME = ST.meId || 'samyak';
+  // Known genders (used only for relation words). Anyone not listed gets a gender-neutral word.
+  const GENDER = { dipak: 'm', 'dipak#sp': 'f', gondu: 'm', 'gondu#sp': 'f', devindra: 'f', 'devindra#sp': 'm' };
+
+  /* ---------- data ---------- */
+  const byId = {};
+  (function idx(n, p, d) { n.parent = p; n.depth = d; byId[n.id] = n; (n.children || []).forEach((c) => idx(c, n, d + 1)); })(window.FAMILY, null, 0);
+  const me = byId[ME];
+  const onPath = new Set(); for (let n = me; n; n = n.parent) onPath.add(n.id);
+  const gen = (n) => me.depth - n.depth;
+  const maxGen = Math.max(...[...onPath].map((id) => gen(byId[id])));
+
+  // pruned graph: direct line + every sibling of a node on the line
+  function prune(n) {
+    const o = { id: n.id, name: n.name, spouse: n.spouse, gen: gen(n), line: onPath.has(n.id), kids: [] };
+    if (onPath.has(n.id) && n !== me) o.kids = (n.children || []).map(prune);
+    return o;
+  }
+  const root = prune(window.FAMILY);
+
+  /* ---------- relation words ---------- */
+  const ancBase = { m: 'father', f: 'mother', n: 'parent' };
+  const term = (g, sex) => {
+    const k = sex === 'm' ? 'm' : sex === 'f' ? 'f' : 'n';
+    const base = g === 1 ? { m: 'Father', f: 'Mother', n: 'Parent' }[k]
+      : { m: 'Grandfather', f: 'Grandmother', n: 'Grandparent' }[k];
+    if (g <= 2) return base;
+    const pre = g === 3 ? 'Great-' : `${g - 2}× great-`;
+    return pre + base.toLowerCase();
+  };
+  const relOf = (p) => { // p: {node, spouseOf}
+    const n = p.n, g = n.gen, sex = GENDER[p.key];
+    if (p.key === ME) return 'You';
+    if (n.line && !p.sp) return term(g, sex);
+    if (p.sp && p.of.line) return term(g, sex);                       // spouse of a direct ancestor
+    if (!p.sp) return g === 1 ? (sex === 'm' ? 'Uncle' : sex === 'f' ? 'Aunt' : "Parent's sibling")
+                                : `${term(g, null)}'s sibling`;
+    return g === 1 ? (sex === 'm' ? 'Uncle' : 'Aunt') + ' (by marriage)' : 'Sibling\'s spouse';
+  };
+
+  /* ---------- people list + BFS distances ---------- */
+  const people = [];
+  (function walk(n) {
+    people.push({ key: n.id, name: n.name, n, sp: false });
+    if (n.spouse) people.push({ key: n.id + '#sp', name: n.spouse, n, sp: true, of: n });
+    n.kids.forEach(walk);
+  })(root);
+  const adj = {}; const link = (a, b) => { (adj[a] = adj[a] || []).push(b); (adj[b] = adj[b] || []).push(a); };
+  let pcEdges = 0, marEdges = 0;
+  (function e(n) { if (n.spouse) { link(n.id, n.id + '#sp'); marEdges++; } n.kids.forEach((k) => { link(n.id, k.id); pcEdges++; e(k); }); })(root);
+  const dist = { [ME]: 0 }, q = [ME];
+  while (q.length) { const a = q.shift(); (adj[a] || []).forEach((b) => { if (!(b in dist)) { dist[b] = dist[a] + 1; q.push(b); } }); }
+
+  /* ---------- layout (tidy tree on the pruned graph) ---------- */
+  const R = 46, MG = 54, GX = 26, ROW = 168, TOP = 74, LEFT = 215;
+  const uw = (n) => (n.spouse ? 4 * R + MG : 2 * R);
+  (function m(n) { n.kids.forEach(m); const kw = n.kids.reduce((s, k) => s + k.sw, 0) + GX * Math.max(0, n.kids.length - 1); n.kw = kw; n.sw = Math.max(uw(n), kw); })(root);
+  (function p(n, left) {
+    n.cx = left + n.sw / 2; n.y = TOP + (maxGen - n.gen) * ROW;
+    n.px = n.cx - uw(n) / 2 + R;               // person circle
+    n.sx = n.cx + uw(n) / 2 - R;               // spouse circle
+    let x = left + (n.sw - n.kw) / 2;
+    n.kids.forEach((k) => { p(k, x); x += k.sw + GX; });
+  })(root, LEFT);
+  const W = LEFT + root.sw + 20, H = TOP + maxGen * ROW + R + 30;
+
+  /* ---------- draw ---------- */
+  const svg = document.getElementById('g');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+  const el = (t, a = {}, parent = svg) => { const e = document.createElementNS(NS, t); Object.entries(a).forEach(([k, v]) => e.setAttribute(k, v)); parent.appendChild(e); return e; };
+  el('defs').innerHTML = '<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>';
+  const S = { stroke: '#333', 'stroke-width': 2.6, fill: 'none', 'stroke-linejoin': 'round' };
+
+  // generation badges
+  const desc = ['You', "Parents' Generation", 'Grandparents', 'Great-grandparents'];
+  const gdesc = (g) => desc[g] || `${g - 2}× great-grandparents`;
+  for (let g = 0; g <= maxGen; g++) {
+    const y = TOP + (maxGen - g) * ROW;
+    el('rect', { x: 0, y: y - 38, width: 196, height: 76, rx: 14, fill: '#e2e2e2' });
+    el('circle', { cx: 30, cy: y, r: 17, fill: g === 0 ? '#2e2e2e' : '#3a3a3a' });
+    el('text', { x: 30, y: y + 6.5, 'text-anchor': 'middle', 'font-size': 19, 'font-weight': 800, fill: '#fff' }).textContent = g;
+    el('text', { x: 56, y: y - 3, 'font-size': 16, 'font-weight': 800 }).textContent = `Generation ${g}`;
+    el('text', { x: 56, y: y + 15, 'font-size': 12, fill: '#555' }).textContent = `(${gdesc(g)})`;
+  }
+
+  // edges first (so circles sit on top)
+  (function edges(n) {
+    if (n.spouse) { // marriage line + label
+      const x1 = n.px + R, x2 = n.sx - R;
+      el('line', { x1, y1: n.y, x2, y2: n.y, ...S });
+      el('text', { x: (x1 + x2) / 2, y: n.y - 8, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 600 }).textContent = 'Marriage';
+    }
+    if (n.kids.length) {
+      const ox = n.spouse ? n.cx : n.px, oy = n.spouse ? n.y : n.y + R, bus = n.y + R + 38;
+      n.kids.forEach((k) => el('path', { d: `M${ox} ${oy} V${bus} H${k.px} V${k.y - R - 3}`, ...S, 'marker-end': 'url(#ah)' }));
+    }
+    n.kids.forEach(edges);
+  })(root);
+
+  // generation-level dashes (badge -> first circle in the row)
+  const rowLeft = {};
+  (function f(n) { const l = n.px - R; rowLeft[n.gen] = Math.min(rowLeft[n.gen] ?? 1e9, l); n.kids.forEach(f); })(root);
+  for (let g = 0; g <= maxGen; g++) { const y = TOP + (maxGen - g) * ROW; el('line', { x1: 200, y1: y, x2: rowLeft[g] - 6, y2: y, stroke: '#9a9a9a', 'stroke-width': 1.8, 'stroke-dasharray': '6 5' }); }
+
+  // circles
+  const wrap = (name) => {
+    const w = name.toUpperCase().split(' '), lines = [];
+    w.forEach((x) => { const last = lines[lines.length - 1]; if (last && (last + ' ' + x).length <= 9) lines[lines.length - 1] = last + ' ' + x; else lines.push(x); });
+    return lines;
+  };
+  function circle(cx, cy, name, kind) {
+    const fill = kind === 'me' ? '#4d4d4d' : kind === 'line' ? '#bdbdbd' : '#ececec';
+    el('circle', { cx, cy, r: R, fill, stroke: '#333', 'stroke-width': kind === 'me' ? 4 : 2.6 });
+    const ls = wrap(name), fs = ls.some((l) => l.length > 7) ? 11.5 : 12.5;
+    ls.forEach((l, i) => el('text', { x: cx, y: cy + (i - (ls.length - 1) / 2) * 14.5 + 4.5, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 700, fill: kind === 'me' ? '#fff' : '#1c1c1c' }).textContent = l);
+  }
+  (function c(n) {
+    circle(n.px, n.y, n.name, n.id === ME ? 'me' : n.line ? 'line' : 'rel');
+    if (n.spouse) circle(n.sx, n.y, n.spouse, n.line ? 'line' : 'rel');
+    n.kids.forEach(c);
+  })(root);
+
+  /* ---------- side panels ---------- */
+  const first = (s) => s.split(' ')[0];
+  document.getElementById('who').innerHTML =
+    `<span>Family: <b>Bhadke</b></span><span>Name: <b>${ST.name || ''}</b></span>${ST.usn ? `<span>USN: <b>${ST.usn}</b></span>` : ''}<span><b>TAE-II DMGT</b></span>`;
+  document.getElementById('t-title').textContent = `Generation Gap from You (${first(me.name)})`;
+  const rows = people.slice().sort((a, b) => a.n.gen - b.n.gen);
+  document.getElementById('tbl').innerHTML =
+    '<tr><th>Person</th><th>Relation to You</th><th class="n">Gen. gap</th><th class="n">Edges</th></tr>' +
+    rows.map((p) => `<tr class="${p.key === ME ? 'me' : ''}"><td>${p.name}</td><td>${relOf(p)}</td><td class="n">${p.n.gen}</td><td class="n">${dist[p.key]}</td></tr>`).join('');
+  const chain = []; for (let n = me; n; n = n.parent) chain.push(first(n.name));
+  document.getElementById('path').innerHTML = `${chain.join(' → ')}<small>(${chain.length - 1} edges / ${chain.length - 1} generations)</small>`;
+  const vertices = people.length, treeV = people.filter((p) => !p.sp).length;
+  const widest = people.filter((p) => !p.sp).sort((a, b) => b.n.kids.length - a.n.kids.length)[0];
+  document.getElementById('obs').innerHTML = [
+    `Each person is a vertex (node): ${vertices} vertices in this graph.`,
+    `Parent–child relationship is a directed edge (${pcEdges}); marriage is an undirected edge (${marEdges}).`,
+    'Gen. gap = difference in generation level; Edges = length of the shortest path between two vertices.',
+    `Without marriages: ${treeV} vertices, ${pcEdges} edges (V − 1) — connected and acyclic, so it is a tree.`,
+    `${widest.name} has the most children here: ${widest.n.kids.length}.`,
+  ].map((t) => `<li>${t}</li>`).join('');
+})();
+</script>
+</body>
+</html>
