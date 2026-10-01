@@ -6,79 +6,91 @@
 <title>Bhadke Family Tree as a Graph</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
-  :root { --ink:#222; --mid:#666; --line:#3b3b3b; --panel:#f3f3f3; --dark:#4b4b4b; }
+  :root { --ink:#1d2140; --mid:#6b7194; --navy:#1b1f4b; --card:#ffffff; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #d9d9d9; font-family: Inter, system-ui, 'Segoe UI', Arial, sans-serif; color: var(--ink); }
-  .sheet { width: 1800px; height: 1273px; margin: 0 auto; background: #fff; padding: 36px 44px; position: relative; overflow: hidden; }
+  body { background: #cfd3ea; font-family: Inter, system-ui, 'Segoe UI', Arial, sans-serif; color: var(--ink); }
+  .sheet { width: 1800px; height: 1273px; margin: 0 auto; padding: 34px 44px; position: relative; overflow: hidden;
+           background: radial-gradient(900px 500px at 8% 0%, #efe9ff, transparent 60%), radial-gradient(900px 600px at 100% 100%, #dff6f0, transparent 60%), #f8f8fd; }
+  .sheet::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(#c9cde6 1.3px, transparent 1.4px); background-size: 30px 30px; opacity: .55; pointer-events: none; }
+  .sheet > * { position: relative; }
   @page { size: 1800px 1273px; margin: 0; }
   @media print { body { background: #fff; } .sheet { margin: 0; } }
 
-  .title { position: relative; width: 980px; margin: 0 auto; padding: 18px 0 14px; border-radius: 16px; text-align: center;
-           background: linear-gradient(#5a5a5a, #3f3f3f); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,.25); }
-  .title h1 { font-size: 54px; font-weight: 800; letter-spacing: .3px; line-height: 1.05; }
-  .title p { margin-top: 6px; font-size: 24px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 18px; }
-  .title p::before, .title p::after { content: ''; width: 90px; height: 2px; background: #fff; opacity: .8; }
-  .leaf { position: absolute; top: 50%; width: 56px; height: 56px; transform: translateY(-50%); opacity: .9; }
-  .leaf.l { left: 34px; } .leaf.r { right: 34px; transform: translateY(-50%) scaleX(-1); }
-  .who { margin: 14px auto 0; width: max-content; display: flex; gap: 14px; font-size: 18px; font-weight: 600; }
-  .who span { padding: 6px 18px; border: 2px solid var(--dark); border-radius: 99px; background: var(--panel); }
-  .who b { font-weight: 800; }
+  .title { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 26px 40px; border-radius: 28px; color: #fff; overflow: hidden;
+           background: linear-gradient(115deg, #1b1f4b 0%, #3a2f8f 55%, #1fa294 120%); box-shadow: 0 14px 34px rgba(40,40,110,.28); }
+  .title::after { content: ''; position: absolute; right: -60px; top: -90px; width: 320px; height: 320px; border-radius: 50%; background: rgba(255,255,255,.07); }
+  .title::before { content: ''; position: absolute; right: 190px; bottom: -120px; width: 240px; height: 240px; border-radius: 50%; background: rgba(255,255,255,.05); }
+  .tl { display: flex; align-items: center; gap: 24px; z-index: 1; }
+  .crest { width: 84px; height: 84px; border-radius: 24px; display: grid; place-items: center; background: linear-gradient(145deg, #ffe08a, #f5a623); box-shadow: 0 8px 20px rgba(0,0,0,.3); }
+  .crest svg { width: 46px; height: 46px; }
+  .title h1 { font-size: 52px; font-weight: 800; letter-spacing: -.5px; line-height: 1.05; }
+  .title p { margin-top: 8px; font-size: 21px; font-weight: 500; opacity: .85; letter-spacing: .4px; }
+  .who { display: grid; grid-template-columns: auto auto; gap: 10px 12px; z-index: 1; }
+  .who span { padding: 9px 20px; border-radius: 14px; font-size: 16px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(6px); white-space: nowrap; }
+  .who b { font-weight: 800; color: #ffe08a; }
 
-  .main { display: grid; grid-template-columns: 1fr 590px; gap: 30px; margin-top: 8px; height: 990px; }
+  .main { display: grid; grid-template-columns: 1fr 590px; gap: 30px; margin-top: 18px; height: 1000px; }
   #g { width: 100%; height: 100%; display: block; }
 
-  .panel { border: 2.5px solid var(--dark); border-radius: 14px; overflow: hidden; background: #fff; margin-bottom: 16px; }
-  .panel > h2 { background: var(--dark); color: #fff; font-size: 20px; font-weight: 700; padding: 8px 16px; display: flex; gap: 10px; align-items: center; }
-  .panel > h2 svg { width: 24px; height: 24px; flex: none; }
+  .panel { border-radius: 22px; overflow: hidden; background: var(--card); margin-bottom: 18px; box-shadow: 0 10px 26px rgba(40,40,110,.12); border: 1px solid #e3e5f5; }
+  .panel > h2 { font-size: 19.5px; font-weight: 700; padding: 13px 18px; display: flex; gap: 12px; align-items: center; color: var(--navy); border-bottom: 1px solid #ebedf8; }
+  .panel > h2 i { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; flex: none; background: var(--c); }
+  .panel > h2 svg { width: 19px; height: 19px; }
   table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-  th { text-align: left; font-weight: 700; color: var(--mid); padding: 8px 12px; background: var(--panel); font-size: 14px; }
-  td { padding: 4.5px 12px; white-space: nowrap; border-top: 1px solid #dcdcdc; }
+  th { text-align: left; font-weight: 700; color: var(--mid); padding: 8px 12px; font-size: 12.5px; letter-spacing: .6px; text-transform: uppercase; }
+  td { padding: 4.5px 12px; white-space: nowrap; }
+  tr:nth-child(even) td { background: #f6f7fd; }
   td.n, th.n { text-align: center; width: 58px; }
-  tr.me td { background: #e6e6e6; font-weight: 700; }
-  .path { padding: 12px 14px; font-size: 18px; font-weight: 600; text-align: center; line-height: 1.5; }
-  .path small { display: block; font-size: 15px; color: var(--mid); font-weight: 500; }
-  .obs { padding: 10px 16px 10px 34px; font-size: 14.5px; line-height: 1.42; }
-  .obs li { margin-bottom: 4px; }
+  td:first-child { display: flex; align-items: center; gap: 9px; }
+  td:first-child i { width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+  td.n b { display: inline-block; min-width: 26px; padding: 1px 0; border-radius: 8px; background: color-mix(in srgb, var(--c) 18%, #fff); color: var(--ink); font-weight: 700; }
+  tr.me td { background: #fff3d1 !important; font-weight: 700; }
+  .path { padding: 14px 16px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 4px; }
+  .path .st { padding: 6px 11px; border-radius: 99px; font-size: 15px; font-weight: 700; color: #fff; background: var(--c); }
+  .path .ar { color: var(--mid); font-weight: 700; }
+  .path small { flex: 1 1 100%; text-align: center; margin-top: 4px; font-size: 14.5px; color: var(--mid); }
+  .obs { list-style: none; padding: 10px 18px 12px; font-size: 14.5px; line-height: 1.42; }
+  .obs li { position: relative; padding: 5px 0 5px 24px; }
+  .obs li::before { content: ''; position: absolute; left: 2px; top: 11px; width: 11px; height: 11px; border-radius: 4px; background: var(--c); transform: rotate(45deg); }
 
-  .foot { position: absolute; left: 44px; right: 650px; bottom: 30px; display: flex; align-items: center; justify-content: space-between; }
-  .legend { border: 2.5px solid var(--dark); border-radius: 14px; padding: 10px 18px 10px; position: relative; display: grid; grid-template-columns: auto auto; gap: 6px 28px; font-size: 15px; }
-  .legend h3 { position: absolute; top: -14px; left: 14px; background: #fff; padding: 0 10px; font-size: 18px; font-weight: 700; font-style: italic; }
-  .legend div { display: flex; align-items: center; gap: 10px; }
-  .legend i { display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); }
-  .legend svg { width: 44px; height: 14px; }
-  .pill { padding: 12px 34px; border-radius: 99px; background: var(--dark); color: #fff; font-size: 22px; font-weight: 600; letter-spacing: .3px; }
+  .foot { position: absolute; left: 44px; right: 650px; bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 14px 22px; border-radius: 18px; background: #fff; font-size: 14.5px; box-shadow: 0 8px 22px rgba(40,40,110,.1); border: 1px solid #e3e5f5; max-width: 760px; }
+  .legend div { display: flex; align-items: center; gap: 9px; color: var(--ink); }
+  .legend i { display: inline-block; width: 20px; height: 20px; border-radius: 50%; }
+  .legend svg { width: 44px; height: 16px; }
+  .pill { padding: 13px 28px; border-radius: 99px; background: linear-gradient(110deg, #3a2f8f, #1fa294); color: #fff; font-size: 17px; font-weight: 600; letter-spacing: .3px; white-space: nowrap; box-shadow: 0 8px 20px rgba(58,47,143,.3); }
 </style>
 </head>
 <body>
 <div class="sheet">
   <div class="title">
-    <svg class="leaf l" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M10 56C14 36 26 18 52 10c2 22-8 38-30 42M10 56c10-12 18-20 30-30"/></svg>
-    <h1>Family Tree as a Graph</h1>
-    <p>Discrete Mathematics &amp; Graph Theory</p>
-    <svg class="leaf r" viewBox="0 0 64 64" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M10 56C14 36 26 18 52 10c2 22-8 38-30 42M10 56c10-12 18-20 30-30"/></svg>
+    <div class="tl">
+      <div class="crest"><svg viewBox="0 0 32 32" fill="none" stroke="#3a2a00" stroke-width="2.2" stroke-linecap="round"><path d="M16 29V15M16 15C16 9 9 9 7 4M16 15c0-6 7-6 9-11M16 22c0-4-5-4-7-7M16 22c0-4 5-4 7-7"/></svg></div>
+      <div><h1>Family Tree as a Graph</h1><p>Discrete Mathematics &amp; Graph Theory &nbsp;·&nbsp; The Bhadke Family</p></div>
+    </div>
+    <div class="who" id="who"></div>
   </div>
-  <div class="who" id="who"></div>
 
   <div class="main">
     <svg id="g" xmlns="http://www.w3.org/2000/svg"></svg>
     <aside>
-      <section class="panel"><h2><svg viewBox="0 0 24 24" fill="#fff"><circle cx="8" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M2 20c0-4 3-6 6-6s6 2 6 6zM14.5 20c.2-3 2-5 4.5-5 2 0 3.5 1.5 3.5 5z"/></svg><span id="t-title"></span></h2>
+      <section class="panel" style="--c:#ef5b7b"><h2><i><svg viewBox="0 0 24 24" fill="#fff"><circle cx="8" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M2 20c0-4 3-6 6-6s6 2 6 6zM14.5 20c.2-3 2-5 4.5-5 2 0 3.5 1.5 3.5 5z"/></svg></i><span id="t-title"></span></h2>
         <table id="tbl"></table></section>
-      <section class="panel"><h2><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-6 4-8 9-8h6M15 5l5 5-5 5"/></svg>Shortest Path: You to Oldest Ancestor</h2>
+      <section class="panel" style="--c:#3b82f6"><h2><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-6 4-8 9-8h6M15 5l5 5-5 5"/></svg></i>Shortest Path: You to Oldest Ancestor</h2>
         <div class="path" id="path"></div></section>
-      <section class="panel"><h2><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"/></svg>Key Observations</h2>
+      <section class="panel" style="--c:#2eb6a5"><h2><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"/></svg></i>Key Observations</h2>
         <ul class="obs" id="obs"></ul></section>
     </aside>
   </div>
 
   <div class="foot">
-    <div class="legend"><h3>Legend</h3>
-      <div><i style="background:#4d4d4d"></i>= You</div>
-      <div><svg viewBox="0 0 44 14"><line x1="0" y1="7" x2="44" y2="7" stroke="#333" stroke-width="2.4"/></svg>= Marriage</div>
-      <div><i style="background:#bdbdbd"></i>= Direct ancestor</div>
-      <div><svg viewBox="0 0 44 14"><line x1="0" y1="7" x2="38" y2="7" stroke="#333" stroke-width="2.4"/><path d="M30 2l9 5-9 5z" fill="#333"/></svg>= Parent – Child</div>
-      <div><i style="background:#ececec"></i>= Relative / spouse</div>
-      <div><svg viewBox="0 0 44 14"><line x1="0" y1="7" x2="44" y2="7" stroke="#333" stroke-width="2" stroke-dasharray="5 4"/></svg>= Generation level</div>
+    <div class="legend">
+      <div><i style="background:#f5a623;box-shadow:0 0 0 4px #ffe6a8"></i>You</div>
+      <div><i style="background:linear-gradient(135deg,#ef5b7b,#8b6cf0,#2eb6a5)"></i>Direct ancestor (colour = generation)</div>
+      <div><i style="background:#fff;border:2.5px solid #8b6cf0"></i>Relative / spouse</div>
+      <div><svg viewBox="0 0 44 16"><line x1="0" y1="8" x2="16" y2="8" stroke="#ef5b7b" stroke-width="2.4" stroke-dasharray="3 3"/><circle cx="22" cy="8" r="6" fill="#fff" stroke="#ef5b7b" stroke-width="1.8"/><line x1="28" y1="8" x2="44" y2="8" stroke="#ef5b7b" stroke-width="2.4" stroke-dasharray="3 3"/></svg>Marriage</div>
+      <div><svg viewBox="0 0 44 16"><path d="M0 8H34" stroke="#3b82f6" stroke-width="2.6" fill="none"/><path d="M30 2l11 6-11 6z" fill="#3b82f6"/></svg>Parent – Child</div>
+      <div><svg viewBox="0 0 44 16"><line x1="0" y1="8" x2="44" y2="8" stroke="#9aa0c8" stroke-width="2" stroke-dasharray="5 4"/></svg>Generation level</div>
     </div>
     <div class="pill">Family &nbsp;•&nbsp; Relationships &nbsp;•&nbsp; Graph Theory</div>
   </div>
@@ -156,34 +168,41 @@
   const W = LEFT + root.sw + 20, H = TOP + maxGen * ROW + R + 30;
 
   /* ---------- draw ---------- */
+  const GCOL = ['#f5a623', '#ef5b7b', '#8b6cf0', '#2eb6a5', '#3b82f6', '#f08a3c'];
+  const col = (g) => GCOL[g % GCOL.length];
   const svg = document.getElementById('g');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
   const el = (t, a = {}, parent = svg) => { const e = document.createElementNS(NS, t); Object.entries(a).forEach(([k, v]) => e.setAttribute(k, v)); parent.appendChild(e); return e; };
-  el('defs').innerHTML = '<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>';
-  const S = { stroke: '#333', 'stroke-width': 2.6, fill: 'none', 'stroke-linejoin': 'round' };
+  el('defs').innerHTML = GCOL.map((c, i) => `<marker id="ah${i}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${c}"/></marker>`).join('') + '<filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter><filter id="sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#28286e" flood-opacity=".22"/></filter>';
+  
 
   // generation badges
   const desc = ['You', "Parents' Generation", 'Grandparents', 'Great-grandparents'];
   const gdesc = (g) => desc[g] || `${g - 2}× great-grandparents`;
   for (let g = 0; g <= maxGen; g++) {
-    const y = TOP + (maxGen - g) * ROW;
-    el('rect', { x: 0, y: y - 38, width: 196, height: 76, rx: 14, fill: '#e2e2e2' });
-    el('circle', { cx: 30, cy: y, r: 17, fill: g === 0 ? '#2e2e2e' : '#3a3a3a' });
-    el('text', { x: 30, y: y + 6.5, 'text-anchor': 'middle', 'font-size': 19, 'font-weight': 800, fill: '#fff' }).textContent = g;
-    el('text', { x: 56, y: y - 3, 'font-size': 16, 'font-weight': 800 }).textContent = `Generation ${g}`;
-    el('text', { x: 56, y: y + 15, 'font-size': 12, fill: '#555' }).textContent = `(${gdesc(g)})`;
+    const y = TOP + (maxGen - g) * ROW, c = col(g);
+    el('rect', { x: 0, y: y - 38, width: 196, height: 76, rx: 20, fill: '#fff', filter: 'url(#sh)' });
+    el('rect', { x: 0, y: y - 38, width: 9, height: 76, rx: 4.5, fill: c });
+    el('circle', { cx: 38, cy: y, r: 20, fill: c });
+    el('text', { x: 38, y: y + 7.5, 'text-anchor': 'middle', 'font-size': 22, 'font-weight': 800, fill: '#fff' }).textContent = g;
+    el('text', { x: 68, y: y - 3, 'font-size': 16, 'font-weight': 800, fill: '#1d2140' }).textContent = `Generation ${g}`;
+    el('text', { x: 68, y: y + 16, 'font-size': 12, fill: '#6b7194' }).textContent = `(${gdesc(g)})`;
   }
 
   // edges first (so circles sit on top)
   (function edges(n) {
-    if (n.spouse) { // marriage line + label
-      const x1 = n.px + R, x2 = n.sx - R;
-      el('line', { x1, y1: n.y, x2, y2: n.y, ...S });
-      el('text', { x: (x1 + x2) / 2, y: n.y - 8, 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 600 }).textContent = 'Marriage';
+    if (n.spouse) { // dotted marriage link with a heart
+      const x1 = n.px + R, x2 = n.sx - R, mx = (x1 + x2) / 2, c = col(n.gen);
+      el('line', { x1, y1: n.y, x2, y2: n.y, stroke: c, 'stroke-width': 3, 'stroke-dasharray': '2 6', 'stroke-linecap': 'round' });
+      el('circle', { cx: mx, cy: n.y, r: 13, fill: '#fff', stroke: c, 'stroke-width': 2 });
+      el('text', { x: mx, y: n.y + 5, 'text-anchor': 'middle', 'font-size': 14, fill: c }).textContent = '♥';
     }
     if (n.kids.length) {
-      const ox = n.spouse ? n.cx : n.px, oy = n.spouse ? n.y : n.y + R, bus = n.y + R + 38;
-      n.kids.forEach((k) => el('path', { d: `M${ox} ${oy} V${bus} H${k.px} V${k.y - R - 3}`, ...S, 'marker-end': 'url(#ah)' }));
+      const ox = n.spouse ? n.cx : n.px, oy = n.spouse ? n.y + 13 : n.y + R;
+      n.kids.forEach((k) => {
+        const ey = k.y - R - 4, ym = oy + (ey - oy) * 0.55, c = col(k.gen);
+        el('path', { d: `M${ox} ${oy} C${ox} ${ym}, ${k.px} ${ym - (ey - oy) * 0.1}, ${k.px} ${ey}`, stroke: c, 'stroke-width': 3.2, fill: 'none', 'stroke-linecap': 'round', opacity: .9, 'marker-end': `url(#ah${k.gen % GCOL.length})` });
+      });
     }
     n.kids.forEach(edges);
   })(root);
@@ -191,7 +210,7 @@
   // generation-level dashes (badge -> first circle in the row)
   const rowLeft = {};
   (function f(n) { const l = n.px - R; rowLeft[n.gen] = Math.min(rowLeft[n.gen] ?? 1e9, l); n.kids.forEach(f); })(root);
-  for (let g = 0; g <= maxGen; g++) { const y = TOP + (maxGen - g) * ROW; el('line', { x1: 200, y1: y, x2: rowLeft[g] - 6, y2: y, stroke: '#9a9a9a', 'stroke-width': 1.8, 'stroke-dasharray': '6 5' }); }
+  for (let g = 0; g <= maxGen; g++) { const y = TOP + (maxGen - g) * ROW; el('line', { x1: 200, y1: y, x2: rowLeft[g] - 6, y2: y, stroke: '#aab0d4', 'stroke-width': 1.8, 'stroke-dasharray': '6 5' }); }
 
   // circles
   const wrap = (name) => {
@@ -199,29 +218,34 @@
     w.forEach((x) => { const last = lines[lines.length - 1]; if (last && (last + ' ' + x).length <= 9) lines[lines.length - 1] = last + ' ' + x; else lines.push(x); });
     return lines;
   };
-  function circle(cx, cy, name, kind) {
-    const fill = kind === 'me' ? '#4d4d4d' : kind === 'line' ? '#bdbdbd' : '#ececec';
-    el('circle', { cx, cy, r: R, fill, stroke: '#333', 'stroke-width': kind === 'me' ? 4 : 2.6 });
+  function circle(cx, cy, name, kind, g) {
+    const c = col(g);
+    if (kind === 'me') el('circle', { cx, cy, r: R + 8, fill: c, opacity: .45, filter: 'url(#glow)' });
+    if (kind === 'rel') {
+      el('circle', { cx, cy, r: R, fill: '#fff', stroke: c, 'stroke-width': 3, filter: 'url(#sh)' });
+      el('circle', { cx, cy, r: R, fill: c, opacity: .13 });
+    } else el('circle', { cx, cy, r: R, fill: c, stroke: '#fff', 'stroke-width': 3.5, filter: 'url(#sh)' });
+    if (kind === 'me') el('circle', { cx, cy, r: R + 4, fill: 'none', stroke: c, 'stroke-width': 2.5 });
     const ls = wrap(name), fs = ls.some((l) => l.length > 7) ? 11.5 : 12.5;
-    ls.forEach((l, i) => el('text', { x: cx, y: cy + (i - (ls.length - 1) / 2) * 14.5 + 4.5, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 700, fill: kind === 'me' ? '#fff' : '#1c1c1c' }).textContent = l);
+    ls.forEach((l, i) => el('text', { x: cx, y: cy + (i - (ls.length - 1) / 2) * 14.5 + 4.5, 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 800, fill: kind === 'rel' ? '#1d2140' : '#fff' }).textContent = l);
   }
   (function c(n) {
-    circle(n.px, n.y, n.name, n.id === ME ? 'me' : n.line ? 'line' : 'rel');
-    if (n.spouse) circle(n.sx, n.y, n.spouse, n.line ? 'line' : 'rel');
+    circle(n.px, n.y, n.name, n.id === ME ? 'me' : n.line ? 'line' : 'rel', n.gen);
+    if (n.spouse) circle(n.sx, n.y, n.spouse, n.line ? 'line' : 'rel', n.gen);
     n.kids.forEach(c);
   })(root);
 
   /* ---------- side panels ---------- */
   const first = (s) => s.split(' ')[0];
   document.getElementById('who').innerHTML =
-    `<span>Family: <b>Bhadke</b></span><span>Name: <b>${ST.name || ''}</b></span>${ST.usn ? `<span>USN: <b>${ST.usn}</b></span>` : ''}<span><b>TAE-II DMGT</b></span>`;
+    `<span>Family: <b>Bhadke</b></span><span>Name: <b>${ST.name || ''}</b></span>${ST.usn ? `<span>USN: <b>${ST.usn}</b></span>` : '<span></span>'}<span><b>TAE-II DMGT</b></span>`;
   document.getElementById('t-title').textContent = `Generation Gap from You (${first(me.name)})`;
   const rows = people.slice().sort((a, b) => a.n.gen - b.n.gen);
   document.getElementById('tbl').innerHTML =
     '<tr><th>Person</th><th>Relation to You</th><th class="n">Gen. gap</th><th class="n">Edges</th></tr>' +
-    rows.map((p) => `<tr class="${p.key === ME ? 'me' : ''}"><td>${p.name}</td><td>${relOf(p)}</td><td class="n">${p.n.gen}</td><td class="n">${dist[p.key]}</td></tr>`).join('');
-  const chain = []; for (let n = me; n; n = n.parent) chain.push(first(n.name));
-  document.getElementById('path').innerHTML = `${chain.join(' → ')}<small>(${chain.length - 1} edges / ${chain.length - 1} generations)</small>`;
+    rows.map((p) => `<tr class="${p.key === ME ? 'me' : ''}" style="--c:${col(p.n.gen)}"><td><i></i>${p.name}</td><td>${relOf(p)}</td><td class="n"><b>${p.n.gen}</b></td><td class="n"><b>${dist[p.key]}</b></td></tr>`).join('');
+  const chain = []; for (let n = me; n; n = n.parent) chain.push(n);
+  document.getElementById('path').innerHTML = chain.map((n) => `<span class="st" style="--c:${col(gen(n))}">${first(n.name)}</span>`).join('<span class="ar">→</span>') + `<small>${chain.length - 1} edges / ${chain.length - 1} generations</small>`;
   const vertices = people.length, treeV = people.filter((p) => !p.sp).length;
   const widest = people.filter((p) => !p.sp).sort((a, b) => b.n.kids.length - a.n.kids.length)[0];
   document.getElementById('obs').innerHTML = [
@@ -230,7 +254,7 @@
     'Gen. gap = difference in generation level; Edges = length of the shortest path between two vertices.',
     `Without marriages: ${treeV} vertices, ${pcEdges} edges (V − 1) — connected and acyclic, so it is a tree.`,
     `${widest.name} has the most children here: ${widest.n.kids.length}.`,
-  ].map((t) => `<li>${t}</li>`).join('');
+  ].map((t, i) => `<li style="--c:${col(i + 1)}">${t}</li>`).join('');
 })();
 </script>
 </body>
