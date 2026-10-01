@@ -14,7 +14,7 @@
   .sheet::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(#c9cde6 1.3px, transparent 1.4px); background-size: 30px 30px; opacity: .55; pointer-events: none; }
   .sheet > * { position: relative; }
   @page { size: 1800px 1273px; margin: 0; }
-  @media print { body { background: #fff; } .sheet { margin: 0; } }
+  @media print { body { background: #fff; } .sheet { margin: 0; } .no-print { display: none !important; } }
 
   .title { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 26px 40px; border-radius: 28px; color: #fff; overflow: hidden;
            background: linear-gradient(115deg, #1b1f4b 0%, #3a2f8f 55%, #1fa294 120%); box-shadow: 0 14px 34px rgba(40,40,110,.28); }
@@ -78,7 +78,7 @@
         <table id="tbl"></table></section>
       <section class="panel" style="--c:#3b82f6"><h2><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c0-6 4-8 9-8h6M15 5l5 5-5 5"/></svg></i>Shortest Path: You to Oldest Ancestor</h2>
         <div class="path" id="path"></div></section>
-      <section class="panel" style="--c:#2eb6a5"><h2><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"/></svg></i>Key Observations</h2>
+      <section class="panel no-print" style="--c:#2eb6a5"><h2><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"/></svg></i>Key Observations</h2>
         <ul class="obs" id="obs"></ul></section>
     </aside>
   </div>
