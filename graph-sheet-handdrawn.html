@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bhadke Family Tree as a Graph — hand-drawn A4</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  html, body { margin: 0; background: #888; }
+  #s { display: block; margin: 0 auto; width: 210mm; height: 297mm; background: #fff; }
+  @media print { html, body { background: #fff; } }
+  text { font-family: Caveat, cursive; font-weight: 600; }
+</style>
+</head>
+<body>
+<svg id="s" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2100 2970"></svg>
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<script src="data.js"></script>
+<script src="student.js"></script>
+<script>
+(async () => {
+  try { await document.fonts.load('600 40px Caveat'); } catch (_) {}
+  const NS = 'http://www.w3.org/2000/svg', svg = document.getElementById('s'), rc = rough.svg(svg);
+  const INK = '#1d2f8a', INK2 = '#26379a', RED = '#c23a3a', PENCIL = '#8a90b3', HILITE = '#ffe45c';
+  const ST = window.STUDENT || {}, ME = ST.meId || 'samyak';
+  let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const sd = () => Math.floor(rnd() * 99999);
+  const add = (e, p = svg) => (p.appendChild(e), e);
+  const el = (t, a = {}, p = svg) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return add(e, p); };
+
+  /* ---- paper: white A4 with faint scan shading ---- */
+  svg.insertAdjacentHTML('beforeend', `<defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .07 0"/></filter>
+    <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".05"/><stop offset=".3" stop-color="#000" stop-opacity="0"/><stop offset=".8" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".07"/></linearGradient></defs>
+    <rect width="2100" height="2970" fill="#fdfdfb"/><rect width="2100" height="2970" filter="url(#grain)"/><rect width="2100" height="2970" fill="url(#shade)"/>`);
+
+  /* ---- pen helpers ---- */
+  const root_g = el('g');
+  const ln = (g, x1, y1, x2, y2, o = {}) => add(rc.line(x1, y1, x2, y2, { stroke: INK, strokeWidth: 3, roughness: 1.7, bowing: 2.6, seed: sd(), ...o }), g);
+  function txt(g, s, x, y, { size = 44, anchor = 'start', fill = INK2, jit = 3, rot = 1.2 } = {}) {
+    const t = el('text', { x, y, 'font-size': size, 'text-anchor': anchor, fill }, g);
+    t.textContent = s; let prev = 0; const dys = [], rots = [];
+    [...s].forEach(() => { const o = (rnd() - .5) * jit * 2; dys.push((o - prev).toFixed(2)); prev = o; rots.push(((rnd() - .5) * rot * 4).toFixed(1)); });
+    t.setAttribute('dy', dys.join(' ')); t.setAttribute('rotate', rots.join(' '));
+    t.setAttribute('transform', `rotate(${((rnd() - .5) * 1.4).toFixed(2)} ${x} ${y})`);
+    return t;
+  }
+  const arrowTo = (g, x1, y1, x2, y2) => {
+    ln(g, x1, y1, x2, y2); const a = Math.atan2(y2 - y1, x2 - x1), L = 17;
+    ln(g, x2, y2, x2 - L * Math.cos(a - .5), y2 - L * Math.sin(a - .5), { roughness: 1, strokeWidth: 3 });
+    ln(g, x2, y2, x2 - L * Math.cos(a + .5), y2 - L * Math.sin(a + .5), { roughness: 1, strokeWidth: 3 });
+  };
+  const heart = (g, cx, cy, s = 1) => add(rc.path(`M${cx} ${cy + 9 * s} C ${cx - 20 * s} ${cy - 6 * s}, ${cx - 9 * s} ${cy - 18 * s}, ${cx} ${cy - 6 * s} C ${cx + 9 * s} ${cy - 18 * s}, ${cx + 20 * s} ${cy - 6 * s}, ${cx} ${cy + 9 * s}z`, { stroke: RED, strokeWidth: 2.4, fill: RED, fillStyle: 'hachure', hachureGap: 3, roughness: 1.1, seed: sd() }), g);
+
+  /* ---- data (same logic as the printable sheet) ---- */
+  const byId = {};
+  (function idx(n, p, d) { n.parent = p; n.depth = d; byId[n.id] = n; (n.children || []).forEach((c) => idx(c, n, d + 1)); })(window.FAMILY, null, 0);
+  const me = byId[ME], onPath = new Set(); for (let n = me; n; n = n.parent) onPath.add(n.id);
+  const gen = (n) => me.depth - n.depth, maxGen = Math.max(...[...onPath].map((id) => gen(byId[id])));
+  const GENDER = { dipak: 'm', 'dipak#sp': 'f', gondu: 'm', 'gondu#sp': 'f', devindra: 'f', 'devindra#sp': 'm' };
+  const prune = (n) => ({ id: n.id, name: n.name, spouse: n.spouse, gen: gen(n), line: onPath.has(n.id), kids: onPath.has(n.id) && n !== me ? (n.children || []).map(prune) : [] });
+  const root = prune(window.FAMILY);
+  const term = (g, sex) => { const k = sex || 'n'; const base = g === 1 ? { m: 'Father', f: 'Mother', n: 'Parent' }[k] : { m: 'Grandfather', f: 'Grandmother', n: 'Grandparent' }[k]; if (g <= 2) return base; return (g === 3 ? 'Great-' : `${g - 2}× great-`) + base.toLowerCase(); };
+  const relOf = (p) => { const g = p.n.gen, sex = GENDER[p.key];
+    if (p.key === ME) return 'You';
+    if (p.n.line && !p.sp) return term(g, sex);
+    if (p.sp && p.n.line) return term(g, sex);
+    if (!p.sp) return g === 1 ? (sex === 'm' ? 'Uncle' : sex === 'f' ? 'Aunt' : "Parent's sibling") : `${term(g, null)}'s sibling`;
+    return g === 1 ? (sex === 'm' ? 'Uncle' : 'Aunt') + ' (by marriage)' : "Sibling's spouse"; };
+  const people = [];
+  (function w(n) { people.push({ key: n.id, name: n.name, n, sp: false }); if (n.spouse) people.push({ key: n.id + '#sp', name: n.spouse, n, sp: true }); n.kids.forEach(w); })(root);
+  const adj = {}, link = (a, b) => { (adj[a] = adj[a] || []).push(b); (adj[b] = adj[b] || []).push(a); };
+  (function e(n) { if (n.spouse) link(n.id, n.id + '#sp'); n.kids.forEach((k) => { link(n.id, k.id); e(k); }); })(root);
+  const dist = { [ME]: 0 }, q = [ME];
+  while (q.length) { const a = q.shift(); (adj[a] || []).forEach((b) => { if (!(b in dist)) { dist[b] = dist[a] + 1; q.push(b); } }); }
+
+  /* ---- tidy-tree layout (layout units, scaled onto the page) ---- */
+  const R = 46, MG = 54, GX = 26, ROW = 168, TOP = 56, LEFT = 245;
+  const uw = (n) => (n.spouse ? 4 * R + MG : 2 * R);
+  (function m(n) { n.kids.forEach(m); const kw = n.kids.reduce((s, k) => s + k.sw, 0) + GX * Math.max(0, n.kids.length - 1); n.kw = kw; n.sw = Math.max(uw(n), kw); })(root);
+  (function p(n, left) { n.cx = left + n.sw / 2; n.y = TOP + (maxGen - n.gen) * ROW; n.px = n.cx - uw(n) / 2 + R; n.sx = n.cx + uw(n) / 2 - R;
+    let x = left + (n.sw - n.kw) / 2; n.kids.forEach((k) => { p(k, x); x += k.sw + GX; }); })(root, LEFT);
+  const GW = LEFT + root.sw + 10, GH = TOP + maxGen * ROW + R + 24;
+
+  /* ---- title block ---- */
+  const T = add(document.createElementNS(NS, 'g'), root_g);
+  txt(T, 'Family Tree as a Graph', 1050, 175, { size: 150, anchor: 'middle', fill: INK, jit: 4 });
+  ln(T, 380, 205, 1720, 200, { strokeWidth: 4.5 }); ln(T, 520, 228, 1580, 226, { strokeWidth: 3 });
+  txt(T, 'Discrete Mathematics & Graph Theory', 1050, 300, { size: 66, anchor: 'middle' });
+  txt(T, `Name: ${ST.name || ''}   |   USN: ${ST.usn || ''}   |   TAE-II DMGT`, 1050, 372, { size: 54, anchor: 'middle' });
+
+  /* ---- graph, scaled to fill the page width ---- */
+  const K = Math.min(1960 / GW, 1.5), GX0 = (2100 - GW * K) / 2, GY0 = 430;
+  const G = add(document.createElementNS(NS, 'g'), root_g); G.setAttribute('transform', `translate(${GX0} ${GY0}) scale(${K})`);
+
+  // generation labels
+  const desc = ['(You)', "(Parents' Generation)", '(Grandparents)', '(Great-grandparents)'];
+  const gdesc = (g) => desc[g] || `(${g - 2}× great-grandparents)`;
+  for (let g = 0; g <= maxGen; g++) {
+    const y = TOP + (maxGen - g) * ROW;
+    add(rc.rectangle(2, y - 34, 218, 68, { stroke: INK, strokeWidth: 2.4, roughness: 1.6, seed: sd() }), G);
+    add(rc.circle(32, y, 34, { stroke: INK, strokeWidth: 2.4, fill: INK, fillStyle: 'solid', roughness: 1.2, seed: sd() }), G);
+    txt(G, String(g), 32, y + 9, { size: 30, anchor: 'middle', fill: '#fff', jit: 1 });
+    txt(G, `Generation ${g}`, 62, y - 3, { size: 27 });
+    txt(G, gdesc(g), 62, y + 22, { size: 17, fill: '#4a548f' });
+  }
+
+  // edges
+  (function edges(n) {
+    if (n.spouse) { const x1 = n.px + R, x2 = n.sx - R; ln(G, x1, n.y, x2, n.y); heart(G, (x1 + x2) / 2, n.y - 20, .8); }
+    if (n.kids.length) {
+      const ox = n.spouse ? n.cx : n.px, oy = n.spouse ? n.y : n.y + R, bus = n.y + R + 36;
+      ln(G, ox, oy, ox, bus);
+      const xs = n.kids.map((k) => k.px), lo = Math.min(...xs, ox), hi = Math.max(...xs, ox);
+      if (hi - lo > 1) ln(G, lo, bus, hi, bus);
+      n.kids.forEach((k) => arrowTo(G, k.px, bus, k.px, k.y - R - 4));
+    }
+    n.kids.forEach(edges);
+  })(root);
+
+  // dashed generation lines (badge → first circle)
+  const rowLeft = {}; (function f(n) { rowLeft[n.gen] = Math.min(rowLeft[n.gen] ?? 1e9, n.px - R); n.kids.forEach(f); })(root);
+  for (let g = 0; g <= maxGen; g++) { const y = TOP + (maxGen - g) * ROW; ln(G, 232, y, rowLeft[g] - 8, y, { strokeDasharray: '9 9', strokeWidth: 2, roughness: 1, stroke: PENCIL }); }
+
+  // circles
+  const wrap = (name) => { const ls = []; name.split(' ').forEach((w) => { const l = ls[ls.length - 1]; if (l && (l + ' ' + w).length <= 9) ls[ls.length - 1] = l + ' ' + w; else ls.push(w); }); return ls; };
+  function circle(cx, cy, name, kind) {
+    if (kind === 'me') add(rc.circle(cx, cy, 2 * R, { fill: HILITE, fillStyle: 'solid', stroke: 'none', roughness: 1.6, seed: sd() }), G).setAttribute('style', 'mix-blend-mode:multiply');
+    else if (kind === 'line') add(rc.circle(cx, cy, 2 * R - 6, { fill: PENCIL, fillStyle: 'hachure', hachureGap: 9, hachureAngle: -35, fillWeight: 1.3, stroke: 'none', roughness: 1.6, seed: sd() }), G).setAttribute('opacity', '.55');
+    add(rc.circle(cx, cy, 2 * R, { stroke: INK, strokeWidth: kind === 'me' ? 4.4 : 3, roughness: 1.5, bowing: 1.5, seed: sd() }), G);
+    if (kind === 'me') add(rc.circle(cx, cy, 2 * R + 12, { stroke: INK, strokeWidth: 2, roughness: 2, seed: sd() }), G);
+    const ls = wrap(name);
+    ls.forEach((l, i) => txt(G, l, cx, cy + (i - (ls.length - 1) / 2) * 21 + 7, { size: 23, anchor: 'middle', fill: '#10195e', jit: 1.2, rot: .8 }));
+  }
+  (function c(n) { circle(n.px, n.y, n.name, n.id === ME ? 'me' : n.line ? 'line' : 'rel'); if (n.spouse) circle(n.sx, n.y, n.spouse, n.line ? 'line' : 'rel'); n.kids.forEach(c); })(root);
+
+  // little hand-drawn legend in the free corner (bottom-right of the graph)
+  let freeX = 0; (function f(n) { if (n.gen <= 2) freeX = Math.max(freeX, (n.spouse ? n.sx : n.px) + R); n.kids.forEach(f); })(root);
+  const lx = Math.max(freeX + 50, GW - 330), ly = TOP + (maxGen - 1.55) * ROW;
+  add(rc.rectangle(lx, ly, GW - lx - 6, 190, { stroke: INK, strokeWidth: 2.2, roughness: 1.8, seed: sd() }), G);
+  txt(G, 'Legend', lx + 14, ly - 2, { size: 28 });
+  const lrow = (i, draw, label) => { const y = ly + 34 + i * 30; draw(lx + 26, y); txt(G, label, lx + 56, y + 8, { size: 21 }); };
+  lrow(0, (x, y) => { add(rc.circle(x, y, 20, { fill: HILITE, fillStyle: 'solid', stroke: INK, strokeWidth: 2, roughness: 1.2, seed: sd() }), G); }, '= You');
+  lrow(1, (x, y) => { add(rc.circle(x, y, 20, { fill: PENCIL, fillStyle: 'hachure', hachureGap: 5, stroke: INK, strokeWidth: 2, roughness: 1.2, seed: sd() }), G); }, '= direct ancestor');
+  lrow(2, (x, y) => { add(rc.circle(x, y, 20, { stroke: INK, strokeWidth: 2, roughness: 1.2, seed: sd() }), G); }, '= relative / spouse');
+  lrow(3, (x, y) => { heart(G, x, y, .6); }, '= marriage');
+  lrow(4, (x, y) => { arrowTo(G, x - 14, y, x + 14, y); }, '= parent → child');
+
+  /* ---- table (hand-ruled) ---- */
+  const TX = 90, TW = 1920, colX = [TX, TX + 760, TX + 1440, TX + 1680, TX + TW];
+  const gh = GH * K, TY = GY0 + gh + 50, RH = 49;
+  txt(root_g, `Generation Gap from You (${me.name.split(' ')[0]})`, TX, TY - 14, { size: 56 });
+  const rows = people.slice().sort((a, b) => a.n.gen - b.n.gen);
+  const y0 = TY + 14, hdr = ['Person', 'Relation to You', 'Gen. gap', 'Edges'];
+  ln(root_g, TX, y0, TX + TW, y0, { strokeWidth: 3.4, roughness: .8, bowing: .8 });
+  hdr.forEach((h, i) => txt(root_g, h, i < 2 ? colX[i] + 16 : (colX[i] + colX[i + 1]) / 2, y0 + 36, { size: 42, anchor: i < 2 ? 'start' : 'middle', fill: INK }));
+  const yh = y0 + RH; ln(root_g, TX, yh, TX + TW, yh, { strokeWidth: 3.4, roughness: .8, bowing: .8 }); ln(root_g, TX, yh + 7, TX + TW, yh + 7, { strokeWidth: 2, roughness: .8, bowing: .8 });
+  rows.forEach((p, i) => {
+    const y = yh + 12 + i * RH, yb = y + RH;
+    if (p.key === ME) add(rc.rectangle(TX + 4, y + 3, TW - 8, RH - 4, { fill: HILITE, fillStyle: 'solid', stroke: 'none', seed: sd() }), root_g).setAttribute('style', 'mix-blend-mode:multiply');
+    txt(root_g, p.name, colX[0] + 16, y + 33, { size: 40 });
+    txt(root_g, relOf(p), colX[1] + 16, y + 33, { size: 40 });
+    txt(root_g, String(p.n.gen), (colX[2] + colX[3]) / 2, y + 33, { size: 40, anchor: 'middle' });
+    txt(root_g, String(dist[p.key]), (colX[3] + colX[4]) / 2, y + 33, { size: 40, anchor: 'middle' });
+    ln(root_g, TX, yb, TX + TW, yb + (rnd() - .5) * 2, { strokeWidth: 1.8, roughness: .7, bowing: .8, stroke: INK2 });
+  });
+  const yEnd = yh + 12 + rows.length * RH;
+  colX.forEach((x, i) => ln(root_g, x + (i ? 0 : 0), y0 - 2, x, yEnd, { strokeWidth: 3, roughness: 1.4 }));
+
+  /* ---- shortest path ---- */
+  const chain = []; for (let n = me; n; n = n.parent) chain.push(n.name.split(' ')[0]);
+  txt(root_g, `Shortest path from You to the oldest ancestor:  ${chain.join(' → ')}`, 1050, yEnd + 70, { size: 46, anchor: 'middle', fill: INK });
+  txt(root_g, `(${chain.length - 1} edges / ${chain.length - 1} generations)`, 1050, yEnd + 120, { size: 40, anchor: 'middle', fill: '#4a548f' });
+  window.__done = { yEnd: yEnd + 130 };
+})();
+</script>
+</body>
+</html>
