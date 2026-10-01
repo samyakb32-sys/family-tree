@@ -306,5 +306,3 @@ h1 { font: 700 21px/1.1 var(--serif); letter-spacing: .2px; }
 :root[data-theme="light"][data-bg="2"] { --bg: #fdf0e8; --bg2: #f7e1d5; --bgimg: radial-gradient(1000px 650px at 50% 0%, rgba(255, 140, 90, .28), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgba(255, 70, 130, .16), transparent 60%); }
 :root[data-theme="light"][data-bg="3"] { --bg: #eef5e8; --bg2: #e0ecd6; --bgimg: radial-gradient(1000px 650px at 80% 0%, rgba(120, 200, 100, .3), transparent 60%); }
 :root[data-theme="light"][data-bg="4"] { --bg: #ffffff; --bg2: #f3f3f3; --bgimg: none; }
-
-.usn { margin-top: 3px; font-size: 11.5px; font-weight: 600; letter-spacing: 1.2px; color: var(--gold); }
