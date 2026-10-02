@@ -53,7 +53,7 @@
   .obs li { position: relative; padding: 5px 0 5px 24px; }
   .obs li::before { content: ''; position: absolute; left: 2px; top: 11px; width: 11px; height: 11px; border-radius: 4px; background: var(--c); transform: rotate(45deg); }
 
-  .foot { position: absolute; left: 44px; right: 650px; bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .foot { position: absolute; left: 44px; right: 650px; bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 20px; }
   .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 14px 22px; border-radius: 18px; background: #fff; font-size: 14.5px; box-shadow: 0 8px 22px rgba(40,40,110,.1); border: 1px solid #e3e5f5; max-width: 760px; }
   .legend div { display: flex; align-items: center; gap: 9px; color: var(--ink); }
   .legend i { display: inline-block; width: 20px; height: 20px; border-radius: 50%; }
@@ -84,14 +84,6 @@
   </div>
 
   <div class="foot">
-    <div class="legend">
-      <div><i style="background:#f5a623;box-shadow:0 0 0 4px #ffe6a8"></i>You</div>
-      <div><i style="background:linear-gradient(135deg,#ef5b7b,#8b6cf0,#2eb6a5)"></i>Direct ancestor (colour = generation)</div>
-      <div><i style="background:#fff;border:2.5px solid #8b6cf0"></i>Relative / spouse</div>
-      <div><svg viewBox="0 0 44 16"><line x1="0" y1="8" x2="16" y2="8" stroke="#ef5b7b" stroke-width="2.4" stroke-dasharray="3 3"/><circle cx="22" cy="8" r="6" fill="#fff" stroke="#ef5b7b" stroke-width="1.8"/><line x1="28" y1="8" x2="44" y2="8" stroke="#ef5b7b" stroke-width="2.4" stroke-dasharray="3 3"/></svg>Marriage</div>
-      <div><svg viewBox="0 0 44 16"><path d="M0 8H34" stroke="#3b82f6" stroke-width="2.6" fill="none"/><path d="M30 2l11 6-11 6z" fill="#3b82f6"/></svg>Parent – Child</div>
-      <div><svg viewBox="0 0 44 16"><line x1="0" y1="8" x2="44" y2="8" stroke="#9aa0c8" stroke-width="2" stroke-dasharray="5 4"/></svg>Generation level</div>
-    </div>
     <div class="pill">Family &nbsp;•&nbsp; Relationships &nbsp;•&nbsp; Graph Theory</div>
   </div>
 </div>
@@ -238,7 +230,7 @@
   /* ---------- side panels ---------- */
   const first = (s) => s.split(' ')[0];
   document.getElementById('who').innerHTML =
-    `<span>Family: <b>Bhadke</b></span><span>Name: <b>${ST.name || ''}</b></span>${ST.usn ? `<span>USN: <b>${ST.usn}</b></span>` : '<span></span>'}<span><b>TAE-II DMGT</b></span>`;
+    `<span>Submitted by: <b>${ST.name || ''}</b></span><span>USN: <b>${ST.usn || ''}</b></span><span>Submitted to: <b>${ST.submittedTo || 'Mama'}</b></span><span><b>TAE-II DMGT</b></span>`;
   document.getElementById('t-title').textContent = `Generation Gap from You (${first(me.name)})`;
   const rows = people.slice().sort((a, b) => a.n.gen - b.n.gen);
   document.getElementById('tbl').innerHTML =

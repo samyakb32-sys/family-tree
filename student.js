@@ -3,5 +3,6 @@
 window.STUDENT = {
   name: 'Samyak Bhadke',
   usn: 'CS25041',
-  meId: 'samyak'
+  meId: 'samyak',
+  submittedTo: 'Mama'
 };
